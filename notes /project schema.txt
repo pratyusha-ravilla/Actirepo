@@ -1,0 +1,33 @@
+client/
+│── src/
+│    ├── pages/
+│    │     ├── Auth/
+│    │     │     ├── Login.jsx
+│    │     │     └── Register.jsx
+│    │     │
+│    │     ├── Faculty/
+│    │     │     ├── FacultyDashboard.jsx
+│    │     │     ├── CreateReport.jsx
+│    │     │     ├── EditReport.jsx
+│    │     │     └── ViewMyReport.jsx
+│    │     │
+│    │     ├── Admin/
+│    │     │     ├── AdminDashboard.jsx
+│    │     │     └── ViewReport.jsx
+│    │     │
+│    │     └── Shared/
+│    │           └── Loading.jsx
+│    │
+│    ├── context/
+│    │     └── AuthContext.jsx
+│    │
+│    ├── utils/
+│    │     ├── axiosClient.js
+│    │     └── ProtectedRoute.jsx
+│    │
+│    ├── App.jsx
+│    ├── main.jsx
+│    └── styles.css
+│
+├── index.html
+└── package.json

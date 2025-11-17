@@ -1,0 +1,36 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #fafafa;
+  margin: 0;
+  padding: 0;
+}
+
+input, textarea, select, button {
+  width: 100%;
+  padding: 9px;
+  margin-top: 6px;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+button {
+  background: #1976d2;
+  color: white;
+  cursor: pointer;
+  border: none;
+  font-weight: bold;
+}
+
+button:hover {
+  background: #0d61b3;
+}
+
+h2, h3 {
+  margin-bottom: 10px;
+}
+
+a {
+  color: #1976d2;
+  text-decoration: none;
+}
