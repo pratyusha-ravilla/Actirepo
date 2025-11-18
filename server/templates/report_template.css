@@ -1,0 +1,155 @@
+@page {
+  size: A4;
+  margin: 18mm 20mm 20mm 20mm;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #111;
+}
+
+/* ====================== HEADER IMAGE ====================== */
+.header-container {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5mm;
+}
+
+.header-img {
+  width: 100%;
+  height: auto;
+}
+
+/* ====================== DEPARTMENT NAME ====================== */
+.dept-title {
+  text-align: center;
+  font-size: 20pt;
+  font-weight: bold;
+  color: #000000;
+  margin-top: 5mm;
+}
+
+/* ====================== REPORT TITLE ====================== */
+.report-title {
+  text-align: center;
+  font-size: 20pt;
+  color: #4B0082;
+  font-weight: bold;
+  text-decoration: underline;
+  margin-top: 10mm;
+  margin-bottom: 8mm;
+}
+
+/* ====================== TABLE ====================== */
+.details-table {
+  width: 92%;
+  margin: 0 auto;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.details-table th {
+  background: #E7C4C4;
+  color: #000;
+  font-weight: bold;
+  width: 200px;
+  padding: 10px;
+  border: 1px solid #000;
+}
+
+.details-table td {
+  padding: 10px;
+  border: 1px solid #000;
+}
+
+/* ====================== ACADEMIC YEAR ====================== */
+.academic-year {
+  text-align: center;
+  font-size: 18px;
+  color: #4B0082;
+  font-weight: bold;
+  margin-top: 18mm;
+}
+
+/* ====================== ADDRESS ====================== */
+.address {
+  text-align: center;
+  font-size: 14px;
+  color: #8A1C1C;
+  font-weight: bold;
+  margin-top: 5mm;
+  line-height: 1.4;
+}
+
+/* ====================== SECTION TITLE ====================== */
+.section-title {
+  font-size: 18pt;
+  color: #8A1C1C;
+  font-weight: bold;
+  margin-top: 15mm;
+  text-transform: uppercase;
+}
+
+.image-wrapper img {
+  width: 100%;
+  margin-top: 5mm;
+  border: 1px solid #333;
+}
+
+.photos-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.photos-grid img {
+  width: 170px;
+  border: 1px solid #444;
+}
+
+.session-table {
+  width: 90%;
+  margin-top: 10mm;
+  border-collapse: collapse;
+}
+
+.session-table td {
+  border: 1px solid #444;
+  padding: 8px;
+}
+
+.session-header {
+  background: #E7C4C4;
+  font-weight: bold;
+  width: 200px;
+}
+
+.page-break {
+  page-break-before: always;
+}
+
+/* ===== PLACE FOOTER AT BOTTOM OF FIRST PAGE ===== */
+.first-page-footer {
+  position: absolute;
+  bottom: 20mm;       /* Distance from bottom of page */
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+
+/* Academic Year */
+.first-page-footer .academic-year {
+  font-size: 16pt;
+  font-weight: bold;
+  color: #4B0082;
+  margin-bottom: 4mm;
+}
+
+/* Address Line */
+.first-page-footer .address {
+  font-size: 13px;
+  font-weight: bold;
+  color: #8A1C1C;
+  line-height: 1.4;
+}

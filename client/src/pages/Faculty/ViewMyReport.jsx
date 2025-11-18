@@ -7,13 +7,16 @@ export default function ViewMyReport() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
+
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // backend root URL (e.g. http://localhost:5002)
+  const backend = axiosClient.defaults.baseURL.replace("/api", "");
 
   useEffect(() => {
     const load = async () => {
       try {
-        setLoading(true);
         const res = await axiosClient.get(`/activity/${id}`);
         setData(res.data);
       } catch (err) {
@@ -26,81 +29,144 @@ export default function ViewMyReport() {
     load();
   }, [id]);
 
-  if (loading) return <div style={{ padding: 20 }}>Loading...</div>;
-  if (!data) return <div style={{ padding: 20 }}>Report not found</div>;
+  if (loading) return <div>Loading...</div>;
+  if (!data) return <div>Report not found</div>;
 
-  const baseUploads = axiosClient.defaults.baseURL.replace("/api", "");
+  // ⭐ FORCE DOWNLOAD FUNCTION
+  const downloadFile = async (type) => {
+    try {
+      const url = `${backend}/api/activity/${id}/${type}`;
+
+      const res = await axiosClient.get(url, {
+        responseType: "blob", // <-- IMPORTANT
+      });
+
+      // Create blob URL
+      const blob = new Blob([res.data]);
+      const downloadUrl = window.URL.createObjectURL(blob);
+
+      // Create temporary link
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = `${data.activityName}.${type === "pdf" ? "pdf" : "docx"}`;
+      document.body.appendChild(a);
+      a.click();
+
+      // cleanup
+      a.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+
+    } catch (error) {
+      console.error(error);
+      alert("Download failed");
+    }
+  };
 
   return (
     <div style={{ maxWidth: 900, margin: "20px auto" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h2>{data.activityName || "Activity Report"}</h2>
-        <div>
-         <a href={`/api/activity/${id}/pdf`} target="_blank" rel="noreferrer">Download PDF</a>
-<a href={`/api/activity/${id}/docx`} target="_blank" rel="noreferrer">Download DOCX</a>
+      
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <h2>{data.activityName}</h2>
 
+        {/* ⭐ NEW DOWNLOAD BUTTONS */}
+        <div style={{ display: "flex", gap: 15 }}>
+          <button onClick={() => downloadFile("pdf")}>⬇ Download PDF</button>
+          <button onClick={() => downloadFile("docx")}>⬇ Download DOCX</button>
         </div>
       </div>
 
-      <div style={{ marginTop: 8 }}>
-        <strong>Type:</strong> {data.reportType} &nbsp; | &nbsp;
-        <strong>Status:</strong> {data.status} &nbsp; | &nbsp;
-        <strong>Date:</strong> {data.date || "-"}
+      {/* Basic Info */}
+      <div>
+        <strong>Type:</strong> {data.reportType} |
+        <strong>Status:</strong> {data.status} |
+        <strong>Date:</strong> {data.date}
       </div>
 
-      <section style={{ marginTop: 14 }}>
+      {/* Coordinator */}
+      <section>
         <h3>Coordinator & Details</h3>
-        <div><strong>Coordinator:</strong> {data.coordinator || "-"}</div>
-        <div><strong>Duration:</strong> {data.duration || "-"}</div>
-        <div><strong>PO & POs:</strong> {data.poPos || "-"}</div>
+        <div><strong>Coordinator:</strong> {data.coordinator}</div>
+        <div><strong>Duration:</strong> {data.duration}</div>
+        <div><strong>PO & POs:</strong> {data.poPos}</div>
       </section>
 
-      <section style={{ marginTop: 12 }}>
+      {/* Invitation */}
+      <section>
         <h3>Invitation</h3>
-        {data.invitation ? <img src={`${baseUploads}/${data.invitation}`} alt="inv" style={{ maxWidth: "100%" }} /> : <div>No invitation uploaded</div>}
+        {data.invitation ? (
+          <img src={`${backend}/${data.invitation}`} style={{ maxWidth: "100%" }} />
+        ) : (
+          <div>No invitation uploaded</div>
+        )}
       </section>
 
-      <section style={{ marginTop: 12 }}>
+      {/* Poster */}
+      <section>
         <h3>Poster</h3>
-        {data.poster ? <img src={`${baseUploads}/${data.poster}`} alt="poster" style={{ maxWidth: "100%" }} /> : <div>No poster uploaded</div>}
+        {data.poster ? (
+          <img src={`${backend}/${data.poster}`} style={{ maxWidth: "100%" }} />
+        ) : (
+          <div>No poster uploaded</div>
+        )}
       </section>
 
-      <section style={{ marginTop: 12 }}>
+      {/* Resource Person */}
+      <section>
         <h3>Resource Person</h3>
-        <div><strong>Name:</strong> {data.resourcePerson?.name || "-"}</div>
-        <div><strong>Designation:</strong> {data.resourcePerson?.designation || "-"}</div>
-        <div><strong>Institution:</strong> {data.resourcePerson?.institution || "-"}</div>
-        {data.resourcePerson?.photo && <img src={`${baseUploads}/${data.resourcePerson.photo}`} alt="rp" style={{ width: 120, marginTop: 8 }} />}
+        <div><strong>Name:</strong> {data.resourcePerson?.name}</div>
+        <div><strong>Designation:</strong> {data.resourcePerson?.designation}</div>
+        <div><strong>Institution:</strong> {data.resourcePerson?.institution}</div>
+
+        {data.resourcePerson?.photo && (
+          <img src={`${backend}/${data.resourcePerson.photo}`} style={{ width: 120 }} />
+        )}
       </section>
 
-      <section style={{ marginTop: 12 }}>
+      {/* Session Report */}
+      <section>
         <h3>Session Report</h3>
-        <div>{data.sessionReport?.summary || "-"}</div>
-        <div><strong>Students present:</strong> {data.sessionReport?.participantsCount || "-"}</div>
-        <div><strong>Faculty present:</strong> {data.sessionReport?.facultyCount || "-"}</div>
+        <p>{data.sessionReport?.summary}</p>
+        <p><strong>Students:</strong> {data.sessionReport?.participantsCount}</p>
+        <p><strong>Faculty:</strong> {data.sessionReport?.facultyCount}</p>
       </section>
 
-      <section style={{ marginTop: 12 }}>
+      {/* Attendance */}
+      <section>
         <h3>Attendance</h3>
-        {data.attendanceFile ? <a href={`${baseUploads}/${data.attendanceFile}`} target="_blank" rel="noreferrer">Download attendance</a> : <div>No attendance file</div>}
+        {data.attendanceFile ? (
+          <a href={`${backend}/${data.attendanceFile}`} target="_blank">Open Attendance File</a>
+        ) : (
+          "No attendance uploaded"
+        )}
       </section>
 
-      <section style={{ marginTop: 12 }}>
+      {/* Photos */}
+      <section>
         <h3>Photos</h3>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {(data.photos || []).length === 0 && <div>No photos uploaded</div>}
-          {(data.photos || []).map((p, i) => <img key={i} src={`${baseUploads}/${p}`} alt={`photo-${i}`} style={{ width: 140 }} />)}
+        <div style={{ display: "flex", gap: 10 }}>
+          {(data.photos || []).map((p, i) => (
+            <img key={i} src={`${backend}/${p}`} style={{ width: 140 }} />
+          ))}
         </div>
       </section>
 
-      <section style={{ marginTop: 12 }}>
+      {/* Feedback */}
+      <section>
         <h3>Feedback</h3>
-        <div>{data.feedback || "-"}</div>
+        <p>{data.feedback}</p>
       </section>
 
-      <div style={{ marginTop: 16 }}>
-        {data.status === "pending" && <Link to={`/faculty/report/${id}/edit`}><button>Edit Report</button></Link>}
-        <button onClick={() => navigate("/faculty/dashboard")} style={{ marginLeft: 8 }}>Back to Dashboard</button>
+      {/* Actions */}
+      <div style={{ marginTop: 20 }}>
+        {data.status === "pending" && (
+          <Link to={`/faculty/report/${id}/edit`}>
+            <button>Edit Report</button>
+          </Link>
+        )}
+        <button onClick={() => navigate("/faculty/dashboard")} style={{ marginLeft: 10 }}>
+          Back to Dashboard
+        </button>
       </div>
     </div>
   );

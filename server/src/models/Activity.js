@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 
 const activitySchema = new mongoose.Schema({
   reportType: { type: String, enum: ["conducted", "attended", "expert_talk"], required: true },
+  academicYear: { type: String, required: true },
+  
   activityName: String,
   coordinator: String,
   date: String,
