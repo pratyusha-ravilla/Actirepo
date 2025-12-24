@@ -1,4 +1,11 @@
+
+
+
+
+// client/src/pages/Faculty/ViewMyReports.jsx.jsx
+
 import React, { useEffect, useState, useContext } from "react";
+import { Box, Paper, Typography, Button, Grid } from "@mui/material";
 import axiosClient from "../../utils/axiosClient";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
@@ -11,7 +18,6 @@ export default function ViewMyReport() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // backend root URL (e.g. http://localhost:5002)
   const backend = axiosClient.defaults.baseURL.replace("/api", "");
 
   useEffect(() => {
@@ -29,33 +35,22 @@ export default function ViewMyReport() {
     load();
   }, [id]);
 
-  if (loading) return <div>Loading...</div>;
-  if (!data) return <div>Report not found</div>;
+  if (loading) return <Box sx={{ p: 4 }}>Loading...</Box>;
+  if (!data) return <Box sx={{ p: 4 }}>Report not found</Box>;
 
-  // ⭐ FORCE DOWNLOAD FUNCTION
   const downloadFile = async (type) => {
     try {
       const url = `${backend}/api/activity/${id}/${type}`;
-
-      const res = await axiosClient.get(url, {
-        responseType: "blob", // <-- IMPORTANT
-      });
-
-      // Create blob URL
+      const res = await axiosClient.get(url, { responseType: "blob" });
       const blob = new Blob([res.data]);
       const downloadUrl = window.URL.createObjectURL(blob);
-
-      // Create temporary link
       const a = document.createElement("a");
       a.href = downloadUrl;
       a.download = `${data.activityName}.${type === "pdf" ? "pdf" : "docx"}`;
       document.body.appendChild(a);
       a.click();
-
-      // cleanup
       a.remove();
       window.URL.revokeObjectURL(downloadUrl);
-
     } catch (error) {
       console.error(error);
       alert("Download failed");
@@ -63,111 +58,79 @@ export default function ViewMyReport() {
   };
 
   return (
-    <div style={{ maxWidth: 900, margin: "20px auto" }}>
-      
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <h2>{data.activityName}</h2>
+    <Box sx={{ maxWidth: 1100, mx: "auto", p: 2 }}>
+      <Paper sx={{ p: 3 }}>
+        <Grid container alignItems="center" justifyContent="space-between">
+          <Grid item>
+            <Typography variant="h5" sx={{ fontWeight: 800 }}>{data.activityName}</Typography>
+            <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>
+              {data.reportType} • {data.date} • Status: {data.status}
+            </Typography>
+          </Grid>
 
-        {/* ⭐ NEW DOWNLOAD BUTTONS */}
-        <div style={{ display: "flex", gap: 15 }}>
-          <button onClick={() => downloadFile("pdf")}>⬇ Download PDF</button>
-          <button onClick={() => downloadFile("docx")}>⬇ Download DOCX</button>
-        </div>
-      </div>
+          <Grid item>
+            <Button variant="outlined" sx={{ mr: 1 }} onClick={() => downloadFile("pdf")}>⬇ PDF</Button>
+            <Button variant="outlined" sx={{ mr: 1 }} onClick={() => downloadFile("docx")}>⬇ DOCX</Button>
 
-      {/* Basic Info */}
-      <div>
-        <strong>Type:</strong> {data.reportType} |
-        <strong>Status:</strong> {data.status} |
-        <strong>Date:</strong> {data.date}
-      </div>
+            {data.status === "pending" && (
+              <Link to={`/faculty/report/${id}/edit`} style={{ textDecoration: "none" }}>
+                <Button variant="contained" sx={{ ml: 1 }}>Edit Report</Button>
+              </Link>
+            )}
 
-      {/* Coordinator */}
-      <section>
-        <h3>Coordinator & Details</h3>
-        <div><strong>Coordinator:</strong> {data.coordinator}</div>
-        <div><strong>Duration:</strong> {data.duration}</div>
-        <div><strong>PO & POs:</strong> {data.poPos}</div>
-      </section>
+            <Button onClick={() => navigate("/faculty/dashboard")} sx={{ ml: 1 }} variant="text">Back</Button>
+          </Grid>
+        </Grid>
 
-      {/* Invitation */}
-      <section>
-        <h3>Invitation</h3>
-        {data.invitation ? (
-          <img src={`${backend}/${data.invitation}`} style={{ maxWidth: "100%" }} />
-        ) : (
-          <div>No invitation uploaded</div>
-        )}
-      </section>
+        <Box sx={{ mt: 3 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Coordinator & Details</Typography>
+          <Typography><strong>Coordinator:</strong> {data.coordinator || "-"}</Typography>
+          <Typography><strong>Duration:</strong> {data.duration || "-"}</Typography>
+          <Typography><strong>PO & POs:</strong> {data.poPos || "-"}</Typography>
+        </Box>
 
-      {/* Poster */}
-      <section>
-        <h3>Poster</h3>
-        {data.poster ? (
-          <img src={`${backend}/${data.poster}`} style={{ maxWidth: "100%" }} />
-        ) : (
-          <div>No poster uploaded</div>
-        )}
-      </section>
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Invitation</Typography>
+          {data.invitation ? <img src={`${backend}/${data.invitation}`} style={{ maxWidth: "100%" }} alt="inv" /> : <Typography>No invitation uploaded</Typography>}
+        </Box>
 
-      {/* Resource Person */}
-      <section>
-        <h3>Resource Person</h3>
-        <div><strong>Name:</strong> {data.resourcePerson?.name}</div>
-        <div><strong>Designation:</strong> {data.resourcePerson?.designation}</div>
-        <div><strong>Institution:</strong> {data.resourcePerson?.institution}</div>
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Poster</Typography>
+          {data.poster ? <img src={`${backend}/${data.poster}`} style={{ maxWidth: "100%" }} alt="poster" /> : <Typography>No poster uploaded</Typography>}
+        </Box>
 
-        {data.resourcePerson?.photo && (
-          <img src={`${backend}/${data.resourcePerson.photo}`} style={{ width: 120 }} />
-        )}
-      </section>
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Resource Person</Typography>
+          <Typography><strong>Name:</strong> {data.resourcePerson?.name || "-"}</Typography>
+          <Typography><strong>Designation:</strong> {data.resourcePerson?.designation || "-"}</Typography>
+          <Typography><strong>Institution:</strong> {data.resourcePerson?.institution || "-"}</Typography>
+          {data.resourcePerson?.photo && <Box sx={{ mt: 1 }}><img src={`${backend}/${data.resourcePerson.photo}`} style={{ width: 120 }} alt="rp" /></Box>}
+        </Box>
 
-      {/* Session Report */}
-      <section>
-        <h3>Session Report</h3>
-        <p>{data.sessionReport?.summary}</p>
-        <p><strong>Students:</strong> {data.sessionReport?.participantsCount}</p>
-        <p><strong>Faculty:</strong> {data.sessionReport?.facultyCount}</p>
-      </section>
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Session Report</Typography>
+          <Typography>{data.sessionReport?.summary || "—"}</Typography>
+          <Typography><strong>Students:</strong> {data.sessionReport?.participantsCount || 0}</Typography>
+          <Typography><strong>Faculty:</strong> {data.sessionReport?.facultyCount || 0}</Typography>
+        </Box>
 
-      {/* Attendance */}
-      <section>
-        <h3>Attendance</h3>
-        {data.attendanceFile ? (
-          <a href={`${backend}/${data.attendanceFile}`} target="_blank">Open Attendance File</a>
-        ) : (
-          "No attendance uploaded"
-        )}
-      </section>
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Attendance</Typography>
+          {data.attendanceFile ? <a href={`${backend}/${data.attendanceFile}`} target="_blank" rel="noreferrer">Open Attendance File</a> : <Typography>No attendance uploaded</Typography>}
+        </Box>
 
-      {/* Photos */}
-      <section>
-        <h3>Photos</h3>
-        <div style={{ display: "flex", gap: 10 }}>
-          {(data.photos || []).map((p, i) => (
-            <img key={i} src={`${backend}/${p}`} style={{ width: 140 }} />
-          ))}
-        </div>
-      </section>
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Photos</Typography>
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1 }}>
+            {(data.photos || []).map((p, i) => <img key={i} src={`${backend}/${p}`} style={{ width: 140, borderRadius: 6 }} alt={`photo-${i}`} />)}
+          </Box>
+        </Box>
 
-      {/* Feedback */}
-      <section>
-        <h3>Feedback</h3>
-        <p>{data.feedback}</p>
-      </section>
-
-      {/* Actions */}
-      <div style={{ marginTop: 20 }}>
-        {data.status === "pending" && (
-          <Link to={`/faculty/report/${id}/edit`}>
-            <button>Edit Report</button>
-          </Link>
-        )}
-        <button onClick={() => navigate("/faculty/dashboard")} style={{ marginLeft: 10 }}>
-          Back to Dashboard
-        </button>
-      </div>
-    </div>
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Feedback</Typography>
+          <Typography>{data.feedback || "—"}</Typography>
+        </Box>
+      </Paper>
+    </Box>
   );
 }

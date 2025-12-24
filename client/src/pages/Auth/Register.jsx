@@ -1,6 +1,10 @@
+
+
+// // //client/src/pages/Auth/Register.jsx
 import React, { useState } from "react";
 import axiosClient from "../../utils/axiosClient";
 import { useNavigate, Link } from "react-router-dom";
+import "./Register.css";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -21,59 +25,77 @@ export default function Register() {
       navigate("/login");
     } catch (err) {
       alert(err.response?.data?.message || "Registration failed");
-      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: 560, margin: "40px auto", padding: 20, border: "1px solid #eee", borderRadius: 6 }}>
-      <h2 style={{ marginBottom: 12 }}>Register</h2>
-      <form onSubmit={submit}>
-        <label>Full name</label>
-        <input
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          required
-        />
+    <div className="register-page">
+      <div className="register-card">
+        <h2 className="register-title">Create Account</h2>
+        <p className="register-subtitle">
+          Activity Report Management System
+        </p>
 
-        <label style={{ marginTop: 8 }}>Email</label>
-        <input
-          type="email"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-          required
-        />
+        <form onSubmit={submit}>
+          <div className="form-group">
+            <input
+              placeholder=" "
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              required
+            />
+            <label>Full Name</label>
+          </div>
 
-        <label style={{ marginTop: 8 }}>Password</label>
-        <input
-          type="password"
-          value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
-          required
-        />
+          <div className="form-group">
+            <input
+              type="email"
+              placeholder=" "
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              required
+            />
+            <label>Email</label>
+          </div>
 
-        <label style={{ marginTop: 8 }}>Role</label>
-        <select
-          value={form.role}
-          onChange={(e) => setForm({ ...form, role: e.target.value })}
-        >
-          <option value="faculty">Faculty</option>
-          <option value="hod">HOD</option>
-          <option value="admin">Admin</option>
-          <option value="principal">Principal</option>
-        </select>
+          <div className="form-group">
+            <input
+              type="password"
+              placeholder=" "
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              required
+            />
+            <label>Password</label>
+          </div>
 
-        <button type="submit" style={{ marginTop: 14 }} disabled={loading}>
-          {loading ? "Creating..." : "Register"}
-        </button>
-      </form>
+          <div className="form-group">
+            <select
+              value={form.role}
+              onChange={(e) => setForm({ ...form, role: e.target.value })}
+            >
+              <option value="faculty">Faculty</option>
+              <option value="hod">HOD</option>
+              <option value="admin">Admin</option>
+              <option value="principal">Principal</option>
+            </select>
+            <label>Role</label>
+          </div>
 
-      <div style={{ marginTop: 12 }}>
-        <small>
+          <button
+            className="register-button"
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? "Creating Account..." : "Register"}
+          </button>
+        </form>
+
+        <div className="register-footer">
           Already registered? <Link to="/login">Login</Link>
-        </small>
+        </div>
       </div>
     </div>
   );

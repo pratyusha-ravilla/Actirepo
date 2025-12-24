@@ -1,334 +1,11 @@
 
-// // server/src/controllers/activityController.js
-// import fs from "fs";
-// import path from "path";
-// import Activity from "../models/Activity.js";
-// import puppeteer from "puppeteer";
-// import { Document, Packer, Paragraph, TextRun, ImageRun } from "docx";
-// import { fileURLToPath } from "url";
-
-// // Fix __dirname in ES Modules
-// const __filename = fileURLToPath(import.meta.url);
-// const __dirname = path.dirname(__filename);
-
-// // Correct template and uploads path
-// const TEMPLATE_PATH = path.join(__dirname, "..", "..", "templates", "report_template.html");
-// const UPLOADS_DIR = path.join(__dirname, "..", "..", "uploads");
-
-// // Load template file
-// function loadTemplate() {
-//   return fs.readFileSync(TEMPLATE_PATH, "utf8");
-// }
-
-// // Convert an image relative path to Base64
-// function toDataUrl(relativePath) {
-//   if (!relativePath) return "";
-
-//   try {
-//     const fullPath = path.join(UPLOADS_DIR, path.basename(relativePath));
-//     const buf = fs.readFileSync(fullPath);
-//     const ext = path.extname(fullPath).substring(1);
-//     return `data:image/${ext};base64,${buf.toString("base64")}`;
-//   } catch (e) {
-//     console.log("IMAGE NOT FOUND:", relativePath);
-//     return "";
-//   }
-// }
-
-// //
-// // =================================================================
-// // CREATE ACTIVITY
-// // =================================================================
-// //
-
-// export const createActivity = async (req, res) => {
-//   try {
-//     const payload = req.body.payload ? JSON.parse(req.body.payload) : {};
-//     payload.status = "pending";
-//     payload.resourcePerson = payload.resourcePerson || {};
-
-//     if (req.files.invitation) payload.invitation = "uploads/" + req.files.invitation[0].filename;
-//     if (req.files.poster) payload.poster = "uploads/" + req.files.poster[0].filename;
-//     if (req.files.resourcePhoto) payload.resourcePerson.photo = "uploads/" + req.files.resourcePhoto[0].filename;
-//     if (req.files.attendanceFile) payload.attendanceFile = "uploads/" + req.files.attendanceFile[0].filename;
-//     if (req.files.photos) payload.photos = req.files.photos.map(f => "uploads/" + f.filename);
-
-//     const a = await Activity.create(payload);
-//     res.status(201).json(a);
-
-//   } catch (err) {
-//     console.error("CREATE ERROR:", err);
-//     res.status(500).json({ message: "Create failed", error: err.message });
-//   }
-// };
-
-// //
-// // =================================================================
-// // GET ONE ACTIVITY (IMPORTANT - FIXED)
-// // =================================================================
-// //
-
-// export const getActivity = async (req, res) => {
-//   try {
-//     const a = await Activity.findById(req.params.id).populate("createdBy", "name email");
-//     if (!a) return res.status(404).json({ message: "Not found" });
-
-//     res.json(a);
-//   } catch (err) {
-//     console.error("FETCH ERROR:", err);
-//     res.status(500).json({ message: "Fetch activity failed" });
-//   }
-// };
-
-// //
-// // =================================================================
-// // UPDATE ACTIVITY
-// // =================================================================
-// //
-
-// export const updateActivity = async (req, res) => {
-//   try {
-//     const payload = req.body.payload ? JSON.parse(req.body.payload) : {};
-
-//     if (!payload.resourcePerson) payload.resourcePerson = {};
-
-//     if (req.files.invitation) payload.invitation = "uploads/" + req.files.invitation[0].filename;
-//     if (req.files.poster) payload.poster = "uploads/" + req.files.poster[0].filename;
-//     if (req.files.resourcePhoto) payload.resourcePerson.photo = "uploads/" + req.files.resourcePhoto[0].filename;
-//     if (req.files.attendanceFile) payload.attendanceFile = "uploads/" + req.files.attendanceFile[0].filename;
-//     if (req.files.photos) payload.photos = req.files.photos.map(f => "uploads/" + f.filename);
-
-//     const updated = await Activity.findByIdAndUpdate(req.params.id, payload, { new: true });
-//     res.json(updated);
-
-//   } catch (err) {
-//     console.error("UPDATE ERROR:", err);
-//     res.status(500).json({ message: "Update failed", error: err.message });
-//   }
-// };
-
-// //
-// // =================================================================
-// // GENERATE PDF
-// // =================================================================
-// //
-
-// export const getPdf = async (req, res) => {
-//   try {
-//     const a = await Activity.findById(req.params.id).lean();
-//     if (!a) return res.status(404).json({ message: "Not found" });
-
-//     let html = loadTemplate();
-
-//     // ⭐ Insert Atria full-width header image
-// const headerPath = path.join(__dirname, "..", "..", "templates/images/header.png");
-// html = html.replace("{{headerImage}}", headerPath);
-
-
-//     const titleMap = {
-//       conducted: "ACTIVITY CONDUCTED REPORT",
-//       attended: "ACTIVITY ATTENDED REPORT",
-//       expert_talk: "ACTIVITY EXPERT TALK"
-//     };
-
-//     // Replace variables in template
-//     html = html.replace(/{{reportTitle}}/g, titleMap[a.reportType]);
-//     html = html.replace(/{{academicYear}}/g, a.academicYear);
-//     html = html.replace(/{{activityName}}/g, a.activityName);
-//     html = html.replace(/{{coordinator}}/g, a.coordinator);
-//     html = html.replace(/{{date}}/g, a.date);
-//     html = html.replace(/{{duration}}/g, a.duration);
-//     html = html.replace(/{{poPos}}/g, a.poPos);
-
-//     html = html.replace(/{{resourceName}}/g, a.resourcePerson?.name || "");
-//     html = html.replace(/{{resourceDesignation}}/g, a.resourcePerson?.designation || "");
-//     html = html.replace(/{{resourceInstitution}}/g, a.resourcePerson?.institution || "");
-//     html = html.replace(/{{resourcePhoto}}/g, toDataUrl(a.resourcePerson?.photo));
-
-//     html = html.replace(/{{sessionSummary}}/g, a.sessionReport?.summary || "");
-//     html = html.replace(/{{participants}}/g, a.sessionReport?.participantsCount || "");
-//     html = html.replace(/{{facultyCount}}/g, a.sessionReport?.facultyCount || "");
-//     html = html.replace(/{{feedback}}/g, a.feedback || "");
-
-//     html = html.replace(/{{invitationImage}}/g, toDataUrl(a.invitation));
-//     html = html.replace(/{{posterImage}}/g, toDataUrl(a.poster));
-
-//     const photosHtml = (a.photos || [])
-//       .map(p => `<img src="${toDataUrl(p)}" class="photo-item" />`)
-//       .join("");
-//     html = html.replace(/{{photos}}/g, photosHtml);
-
-//     const attendanceLink = a.attendanceFile
-//       ? `${req.protocol}://${req.get("host")}/${a.attendanceFile}`
-//       : "";
-//     html = html.replace(/{{attendanceFileLink}}/g, attendanceLink);
-
-//     // Puppeteer PDF
-//     const browser = await puppeteer.launch({
-//       headless: "new",
-//       args: ["--no-sandbox", "--disable-setuid-sandbox"]
-//     });
-
-//     const page = await browser.newPage();
-//     await page.setContent(html, { waitUntil: "networkidle0" });
-
-//     const pdf = await page.pdf({
-//       format: "A4",
-//       printBackground: true
-//     });
-
-//     await browser.close();
-
-//     // Allow browser to download
-//     res.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
-//     res.setHeader("Content-Type", "application/pdf");
-//     res.setHeader("Content-Disposition", `attachment; filename="${a.activityName}.pdf"`);
-
-//     res.send(pdf);
-
-//   } catch (err) {
-//     console.error("PDF ERROR:", err);
-//     res.status(500).json({ message: "PDF failed", error: err.message });
-//   }
-// };
-
-// //
-// // =================================================================
-// // GENERATE DOCX
-// // =================================================================
-// //
-
-// export const getDocx = async (req, res) => {
-//   try {
-//     const a = await Activity.findById(req.params.id).lean();
-//     if (!a) return res.status(404).json({ message: "Not found" });
-
-//     const titleMap = {
-//       conducted: "ACTIVITY CONDUCTED REPORT",
-//       attended: "ACTIVITY ATTENDED REPORT",
-//       expert_talk: "ACTIVITY EXPERT TALK"
-//     };
-
-//     // Collect paragraphs & images
-//     const children = [];
-
-//     const safePush = (p) => {
-//       if (p !== null && p !== undefined) children.push(p);
-//     };
-
-//     safePush(new Paragraph({
-//       children: [new TextRun({ text: "DEPARTMENT OF COMPUTER SCIENCE & ENGINEERING", bold: true })]
-//     }));
-
-//     safePush(new Paragraph({
-//       children: [new TextRun({ text: titleMap[a.reportType], bold: true })]
-//     }));
-
-//     safePush(new Paragraph(`ACADEMIC YEAR ${a.academicYear}`));
-//     safePush(new Paragraph(`Activity Name: ${a.activityName}`));
-//     safePush(new Paragraph(`Coordinator: ${a.coordinator}`));
-//     safePush(new Paragraph(`Date: ${a.date}`));
-//     safePush(new Paragraph(`Duration: ${a.duration}`));
-//     safePush(new Paragraph(`PO & POs: ${a.poPos}`));
-
-//     safePush(new Paragraph("TABLE OF CONTENTS"));
-//     [
-//       "Invitation", "Poster", "Resource Person Details", "Session Report",
-//       "Attendance", "Photos", "Feedback"
-//     ].forEach((t, i) =>
-//       safePush(new Paragraph(`${i + 1}. ${t.toUpperCase()}`))
-//     );
-
-//     safePush(new Paragraph("RESOURCE PERSON DETAILS"));
-//     safePush(new Paragraph(`Name: ${a.resourcePerson?.name || ""}`));
-//     safePush(new Paragraph(`Designation: ${a.resourcePerson?.designation || ""}`));
-//     safePush(new Paragraph(`Institution: ${a.resourcePerson?.institution || ""}`));
-
-//     safePush(new Paragraph("SESSION REPORT"));
-//     safePush(new Paragraph(a.sessionReport?.summary || ""));
-//     safePush(new Paragraph(`Students Present: ${a.sessionReport?.participantsCount}`));
-//     safePush(new Paragraph(`Faculty Present: ${a.sessionReport?.facultyCount}`));
-
-//     safePush(new Paragraph("FEEDBACK"));
-//     safePush(new Paragraph(a.feedback || ""));
-
-//     // IMAGE EMBED UTILITY
-//     function embedImage(rel) {
-//       if (!rel) return null;
-//       const full = path.join(UPLOADS_DIR, path.basename(rel));
-//       if (!fs.existsSync(full)) return null;
-
-//       const buffer = fs.readFileSync(full);
-//       return new Paragraph({
-//         children: [
-//           new ImageRun({
-//             data: buffer,
-//             transformation: { width: 500, height: 350 }
-//           })
-//         ]
-//       });
-//     }
-
-//     // Add images
-//     [a.invitation, a.poster, a.resourcePerson?.photo, ...(a.photos || [])]
-//       .forEach(img => safePush(embedImage(img)));
-
-//     // FINAL DOCX — FIXED STRUCTURE
-//     const doc = new Document({
-//       sections: [
-//         {
-//           properties: {},
-//           children: children
-//         }
-//       ]
-//     });
-
-//     const buffer = await Packer.toBuffer(doc);
-
-//     res.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
-//     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-//     res.setHeader("Content-Disposition", `attachment; filename="${a.activityName}.docx"`);
-
-//     res.send(buffer);
-
-//   } catch (err) {
-//     console.error("DOCX ERROR:", err);
-//     res.status(500).json({ message: "DOCX failed", error: err.message });
-//   }
-// };
-
-// //
-// // =================================================================
-// // LIST / APPROVE / REJECT
-// // =================================================================
-// //
-
-// export const listActivities = async (req, res) => {
-//   const list = await Activity.find().populate("createdBy", "name email").sort({ createdAt: -1 });
-//   res.json(list);
-// };
-
-// export const approveActivity = async (req, res) => {
-//   const a = await Activity.findByIdAndUpdate(req.params.id, { status: "approved" }, { new: true });
-//   res.json(a);
-// };
-
-// export const rejectActivity = async (req, res) => {
-//   const a = await Activity.findByIdAndUpdate(req.params.id, { status: "rejected" }, { new: true });
-//   res.json(a);
-// };
-
-
-
-
-
 
 // server/src/controllers/activityController.js
 import fs from "fs";
 import path from "path";
 import Activity from "../models/Activity.js";
 import puppeteer from "puppeteer";
-import { Document, Packer, Paragraph, TextRun, ImageRun } from "docx";
+import { Document, Packer, Paragraph, ImageRun } from "docx";
 import { fileURLToPath } from "url";
 
 // Fix dirname in ESM
@@ -339,7 +16,13 @@ const __dirname = path.dirname(__filename);
 const TEMPLATE_PATH = path.join(__dirname, "..", "..", "templates", "report_template.html");
 const CSS_PATH = path.join(__dirname, "..", "..", "templates", "report_template.css");
 const HEADER_PATH = path.join(__dirname, "..", "..", "templates/images/header.png");
-const UPLOADS_DIR = path.join(__dirname, "..", "..", "uploads");
+// point to server/src/uploads
+const UPLOADS_DIR = path.join(__dirname, "..", "uploads");
+
+// MAKE SURE uploads dir exists (safe-guard)
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
 
 // ============================
 // HELPERS
@@ -348,8 +31,9 @@ const UPLOADS_DIR = path.join(__dirname, "..", "..", "uploads");
 // Base64 for header & static images
 function toBase64(filePath) {
   try {
+    if (!filePath || !fs.existsSync(filePath)) return "";
     const buf = fs.readFileSync(filePath);
-    const ext = path.extname(filePath).substring(1);
+    const ext = path.extname(filePath).substring(1) || "png";
     return `data:image/${ext};base64,${buf.toString("base64")}`;
   } catch (err) {
     console.log("BASE64 ERR:", err);
@@ -357,18 +41,37 @@ function toBase64(filePath) {
   }
 }
 
-// Convert uploaded images → Base64
+
+
+
 function toDataUrl(relativePath) {
   if (!relativePath) return "";
+
   try {
-    const full = path.join(UPLOADS_DIR, path.basename(relativePath));
-    const buf = fs.readFileSync(full);
-    const ext = path.extname(full).substring(1);
-    return `data:image/${ext};base64,${buf.toString("base64")}`;
-  } catch {
+    const filename = path.basename(relativePath);
+    const fullPath = path.join(UPLOADS_DIR, filename);
+
+    if (!fs.existsSync(fullPath)) {
+      console.log("❌ Attendance image NOT found:", fullPath);
+      return "";
+    }
+
+    const buffer = fs.readFileSync(fullPath);
+    const ext = path.extname(fullPath).slice(1).toLowerCase();
+
+    if (!["jpg", "jpeg", "png", "webp"].includes(ext)) {
+      console.log("❌ Not an image file:", filename);
+      return "";
+    }
+
+    return `data:image/${ext};base64,${buffer.toString("base64")}`;
+  } catch (err) {
+    console.log("toDataUrl ERROR:", err.message);
     return "";
   }
 }
+
+
 
 // Load HTML template
 function loadTemplate() {
@@ -386,12 +89,29 @@ export const createActivity = async (req, res) => {
     payload.resourcePerson = payload.resourcePerson || {};
     payload.sessionReport = payload.sessionReport || {};
 
-    // Files
-    if (req.files.invitation) payload.invitation = "uploads/" + req.files.invitation[0].filename;
-    if (req.files.poster) payload.poster = "uploads/" + req.files.poster[0].filename;
-    if (req.files.resourcePhoto) payload.resourcePerson.photo = "uploads/" + req.files.resourcePhoto[0].filename;
-    if (req.files.attendanceFile) payload.attendanceFile = "uploads/" + req.files.attendanceFile[0].filename;
-    if (req.files.photos) payload.photos = req.files.photos.map(f => "uploads/" + f.filename);
+    // Files (store relative paths like "uploads/filename")
+    if (req.files?.invitation) payload.invitation = "uploads/" + req.files.invitation[0].filename;
+    if (req.files?.poster) payload.poster = "uploads/" + req.files.poster[0].filename;
+    if (req.files?.resourcePhoto) payload.resourcePerson.photo = "uploads/" + req.files.resourcePhoto[0].filename;
+    if (req.files?.attendanceFile) payload.attendanceFile = "uploads/" + req.files.attendanceFile[0].filename;
+
+    // NEW: attendanceImages (multiple)
+    if (req.files?.attendanceImages) {
+      payload.attendanceImages = req.files.attendanceImages.map(f => "uploads/" + f.filename);
+    }
+
+    // existing photos
+    if (req.files?.photos) payload.photos = req.files.photos.map(f => "uploads/" + f.filename);
+
+    //feedback
+if (req.files?.feedbackImages) {
+  payload.feedbackImages = req.files.feedbackImages.map(
+    f => "uploads/" + f.filename);
+}
+
+
+    // set createdBy server-side (requires auth middleware)
+    if (req.user && req.user._id) payload.createdBy = req.user._id;
 
     const activity = await Activity.create(payload);
     res.status(201).json(activity);
@@ -400,6 +120,8 @@ export const createActivity = async (req, res) => {
     console.log("CREATE ERROR:", err);
     res.status(500).json({ message: "Create failed", error: err.message });
   }
+  console.log("FILES RECEIVED:", Object.keys(req.files || {}));
+
 };
 
 // ============================
@@ -411,6 +133,7 @@ export const getActivity = async (req, res) => {
     if (!a) return res.status(404).json({ message: "Not found" });
     res.json(a);
   } catch (err) {
+    console.log("GET ACTIVITY ERR:", err);
     res.status(500).json({ message: "Fetch failed" });
   }
 };
@@ -423,17 +146,24 @@ export const updateActivity = async (req, res) => {
     const payload = req.body.payload ? JSON.parse(req.body.payload) : {};
     payload.resourcePerson = payload.resourcePerson || {};
 
-    if (req.files.invitation) payload.invitation = "uploads/" + req.files.invitation[0].filename;
-    if (req.files.poster) payload.poster = "uploads/" + req.files.poster[0].filename;
-    if (req.files.resourcePhoto) payload.resourcePerson.photo = "uploads/" + req.files.resourcePhoto[0].filename;
-    if (req.files.attendanceFile) payload.attendanceFile = "uploads/" + req.files.attendanceFile[0].filename;
-    if (req.files.photos) payload.photos = req.files.photos.map(f => "uploads/" + f.filename);
+    if (req.files?.invitation) payload.invitation = "uploads/" + req.files.invitation[0].filename;
+    if (req.files?.poster) payload.poster = "uploads/" + req.files.poster[0].filename;
+    if (req.files?.resourcePhoto) payload.resourcePerson.photo = "uploads/" + req.files.resourcePhoto[0].filename;
+    if (req.files?.attendanceFile) payload.attendanceFile = "uploads/" + req.files.attendanceFile[0].filename;
+
+    // NEW: attendanceImages (multiple)
+    if (req.files?.attendanceImages) {
+      payload.attendanceImages = req.files.attendanceImages.map(f => "uploads/" + f.filename);
+    }
+
+    if (req.files?.photos) payload.photos = req.files.photos.map(f => "uploads/" + f.filename);
 
     const updated = await Activity.findByIdAndUpdate(req.params.id, payload, { new: true });
     res.json(updated);
 
   } catch (err) {
-    res.status(500).json({ message: "Update failed" });
+    console.log("UPDATE ERROR:", err);
+    res.status(500).json({ message: "Update failed", error: err.message });
   }
 };
 
@@ -443,24 +173,41 @@ export const updateActivity = async (req, res) => {
 export const getPdf = async (req, res) => {
   try {
     const a = await Activity.findById(req.params.id).lean();
+    if (!a) return res.status(404).json({ message: "Not found" });
+
+    // debug: show which files controller sees
+    console.log(
+      "Generating PDF for activity:",
+      a._id,
+      "invitation:",
+      a.invitation,
+      "poster:",
+      a.poster,
+      "resourcePhoto:",
+      a.resourcePerson?.photo,
+      "attendanceFile:",
+      a.attendanceFile,
+      "attendanceImages:",
+      a.attendanceImages || null
+    );
 
     let html = loadTemplate();
 
-    // Insert CSS path
-    html = html.replace("{{cssPath}}", CSS_PATH.replace(/\\/g, "/"));
+    // Insert CSS path (puppeteer addStyleTag uses CSS_PATH)
+    html = html.replace(/{{cssPath}}/g, CSS_PATH.replace(/\\/g, "/"));
 
-    // Insert header image
-    html = html.replace("{{headerImage}}", toBase64(HEADER_PATH));
+    // Insert header image (inline base64)
+    html = html.replace(/{{headerImage}}/g, toBase64(HEADER_PATH));
 
-    // Titles
+    // Titles map
     const titleMap = {
       conducted: "ACTIVITY CONDUCTED REPORT",
       attended: "ACTIVITY ATTENDED REPORT",
       expert_talk: "ACTIVITY EXPERT TALK"
     };
 
-    // Text replacements
-    html = html.replace(/{{reportTitle}}/g, titleMap[a.reportType]);
+    // Basic text replacements
+    html = html.replace(/{{reportTitle}}/g, titleMap[a.reportType] || "");
     html = html.replace(/{{academicYear}}/g, a.academicYear || "");
     html = html.replace(/{{activityName}}/g, a.activityName || "");
     html = html.replace(/{{coordinator}}/g, a.coordinator || "");
@@ -473,25 +220,135 @@ export const getPdf = async (req, res) => {
     html = html.replace(/{{resourceInstitution}}/g, a.resourcePerson?.institution || "");
     html = html.replace(/{{resourcePhoto}}/g, toDataUrl(a.resourcePerson?.photo));
 
+    // Session + feedback replacements (legacy fields)
     html = html.replace(/{{sessionSummary}}/g, a.sessionReport?.summary || "");
-    html = html.replace(/{{participants}}/g, a.sessionReport?.participantsCount || "");
-    html = html.replace(/{{facultyCount}}/g, a.sessionReport?.facultyCount || "");
+    html = html.replace(/{{participants}}/g, (a.sessionReport?.participantsCount ?? a.sessionReport?.participants ?? "") + "");
+    html = html.replace(/{{facultyCount}}/g, (a.sessionReport?.facultyCount ?? "") + "");
     html = html.replace(/{{feedback}}/g, a.feedback || "");
 
+    // Invitation / poster images
     html = html.replace(/{{invitationImage}}/g, toDataUrl(a.invitation));
     html = html.replace(/{{posterImage}}/g, toDataUrl(a.poster));
 
-    // Photos
-    const photosHtml = (a.photos || []).map(p => `<img src="${toDataUrl(p)}">`).join("");
-    html = html.replace(/{{photos}}/g, photosHtml);
+  // ----------------------------
+// PHOTOS PAGE (2 images per page - vertical)
+// ----------------------------
+let photoPagesHtml = "";
 
-    // Attendance link
-    const attendanceUrl = a.attendanceFile
-      ? `${req.protocol}://${req.get("host")}/${a.attendanceFile}`
-      : "";
-    html = html.replace(/{{attendanceFileLink}}/g, attendanceUrl);
+const photosArr = Array.isArray(a.photos) ? a.photos : [];
 
-    // Create PDF
+for (let i = 0; i < photosArr.length; i += 2) {
+  const img1 = toDataUrl(photosArr[i]);
+  const img2 = photosArr[i + 1] ? toDataUrl(photosArr[i + 1]) : "";
+
+  photoPagesHtml += `
+    <div class="photo-page">
+      <div class="photo-box">
+        ${img1 ? `<img src="${img1}" />` : ""}
+      </div>
+
+      <div class="photo-box">
+        ${img2 ? `<img src="${img2}" />` : ""}
+      </div>
+    </div>
+    
+  `;
+}
+
+html = html.replace(/{{photoPages}}/g, photoPagesHtml);
+
+// =============================
+// ATTENDANCE: ONE IMAGE PER PAGE
+// =============================
+let attendancePagesHtml = "";
+
+const attendanceImages = Array.isArray(a.attendanceImages)
+  ? a.attendanceImages
+  : [];
+
+attendanceImages.forEach((imgPath) => {
+  const imgData = toDataUrl(imgPath);
+  if (!imgData) return;
+
+  attendancePagesHtml += `
+    <div class="attendance-page">
+      <div class="attendance-box">
+        <img src="${imgData}" />
+      </div>
+    </div>
+   
+  `;
+});
+
+html = html.replace(/{{attendancePages}}/g, attendancePagesHtml);
+
+
+// =============================
+// FEEDBACK PAGE (2 IMAGES PER PAGE)
+// =============================
+let feedbackPagesHtml = "";
+
+const feedbackArr = Array.isArray(a.feedbackImages) ? a.feedbackImages : [];
+
+for (let i = 0; i < feedbackArr.length; i += 2) {
+  const img1 = toDataUrl(feedbackArr[i]);
+  const img2 = feedbackArr[i + 1] ? toDataUrl(feedbackArr[i + 1]) : "";
+
+  feedbackPagesHtml += `
+    <div class="feedback-page">
+      <div class="feedback-box">
+        ${img1 ? `<img src="${img1}" />` : ""}
+      </div>
+
+      <div class="feedback-box">
+        ${img2 ? `<img src="${img2}" />` : ""}
+      </div>
+    </div>
+  `;
+}
+
+html = html.replace(/{{feedbackPages}}/g, feedbackPagesHtml);
+
+
+
+    // ----------------------------
+    // NEW: Session report specific placeholders (from sessionReport object)
+    // ----------------------------
+    const sr = a.sessionReport || {};
+
+    // session name — fallback to activityName
+    const sessionName = sr.sessionName || sr.session_name || a.activityName || "";
+    html = html.replace(/{{sessionName}}/g, sessionName);
+
+    // coordinators may be array or string, fallback to a.coordinator if missing
+    let coordinators = "";
+    if (Array.isArray(sr.coordinators)) {
+      coordinators = sr.coordinators.join(", ");
+    } else {
+      coordinators = sr.coordinators || sr.coordinatorsText || a.coordinator || "";
+    }
+    html = html.replace(/{{coordinators}}/g, coordinators);
+
+    // google meet link (try multiple possible keys)
+    html = html.replace(/{{googleMeetLink}}/g, sr.googleMeetLink || sr.google_meet_link || sr.meetLink || "");
+
+    // intended participants (try multiple keys)
+    html = html.replace(/{{intendedParticipants}}/g, sr.intendedParticipants || sr.intended_participants || sr.intended || "");
+
+    // category of event (try multiple keys)
+    html = html.replace(/{{categoryOfEvent}}/g, sr.categoryOfEvent || sr.category_of_event || sr.category || "");
+
+    // date_display - prefer sessionReport.date then sessionDate then activity.date
+    const dateDisplay = sr.date || sr.sessionDate || sr.session_date || a.date || "";
+    html = html.replace(/{{date_display}}/g, dateDisplay);
+
+    // ensure session summary is filled (prefer sr.summary)
+    const summaryText = sr.summary || sr.details || a.sessionReport?.summary || a.summary || a.feedback || "";
+    html = html.replace(/{{sessionSummary}}/g, summaryText);
+
+    // ----------------------------
+    // Create PDF with Puppeteer
+    // ----------------------------
     const browser = await puppeteer.launch({
       headless: "new",
       args: [
@@ -506,17 +363,46 @@ export const getPdf = async (req, res) => {
     const page = await browser.newPage();
 
     await page.setContent(html, { waitUntil: "networkidle0" });
-
     await page.addStyleTag({ path: CSS_PATH });
 
-    const pdf = await page.pdf({
-      format: "A4",
-      printBackground: true
-    });
+   const pdf = await page.pdf({
+  format: "A4",
+  printBackground: true,
+
+  displayHeaderFooter: true,
+
+  headerTemplate: `
+    <div style="width:100%; text-align:center; margin-top:10px;">
+      <img src="${toBase64(HEADER_PATH)}" style="width:90%; height:auto;" />
+    </div>
+  `,
+
+  footerTemplate: `
+    <div style="
+      width:100%;
+      font-family:'Times New Roman', Times, serif;
+      font-size:10pt;
+      color:#000;
+      padding:0 20mm;
+    ">
+      <div style="float:right;">
+        Page <span class="pageNumber"></span> of <span class="totalPages"></span>
+      </div>
+    </div>
+  `,
+
+  margin: {
+    top: "100px",     // space for header
+    bottom: "50px",   // IMPORTANT: space for footer
+    left: "20px",
+    right: "20px"
+  }
+});
+
 
     await browser.close();
 
-    res.setHeader("Content-Disposition", `attachment; filename="${a.activityName}.pdf"`);
+    res.setHeader("Content-Disposition", `attachment; filename="${(a.activityName || 'report').replace(/[^a-z0-9_\-\.]/gi,'_')}.pdf"`);
     res.setHeader("Content-Type", "application/pdf");
     res.send(pdf);
 
@@ -526,12 +412,15 @@ export const getPdf = async (req, res) => {
   }
 };
 
+
+
 // ============================
 // GENERATE DOCX
 // ============================
 export const getDocx = async (req, res) => {
   try {
     const a = await Activity.findById(req.params.id).lean();
+    if (!a) return res.status(404).json({ message: "Not found" });
 
     const titleMap = {
       conducted: "ACTIVITY CONDUCTED REPORT",
@@ -557,15 +446,15 @@ export const getDocx = async (req, res) => {
     }
 
     // Content
-    children.push(new Paragraph(titleMap[a.reportType]));
-    children.push(new Paragraph(`Academic Year: ${a.academicYear}`));
-    children.push(new Paragraph(`Activity Name: ${a.activityName}`));
-    children.push(new Paragraph(`Coordinator: ${a.coordinator}`));
-    children.push(new Paragraph(`Date: ${a.date}`));
-    children.push(new Paragraph(`Duration: ${a.duration}`));
-    children.push(new Paragraph(`PO & POs: ${a.poPos}`));
+    children.push(new Paragraph(titleMap[a.reportType] || ""));
+    children.push(new Paragraph(`Academic Year: ${a.academicYear || ""}`));
+    children.push(new Paragraph(`Activity Name: ${a.activityName || ""}`));
+    children.push(new Paragraph(`Coordinator: ${a.coordinator || ""}`));
+    children.push(new Paragraph(`Date: ${a.date || ""}`));
+    children.push(new Paragraph(`Duration: ${a.duration || ""}`));
+    children.push(new Paragraph(`PO & POs: ${a.poPos || ""}`));
 
-    // Embed images
+    // Embed images if present
     function embed(rel) {
       if (!rel) return null;
       const full = path.join(UPLOADS_DIR, path.basename(rel));
@@ -581,11 +470,25 @@ export const getDocx = async (req, res) => {
       });
     }
 
-    children.push(embed(a.invitation));
-    children.push(embed(a.poster));
-    children.push(embed(a.resourcePerson?.photo));
+    const maybeInvite = embed(a.invitation);
+    if (maybeInvite) children.push(maybeInvite);
 
-    (a.photos || []).forEach(p => children.push(embed(p)));
+    const maybePoster = embed(a.poster);
+    if (maybePoster) children.push(maybePoster);
+
+    const maybeResourcePhoto = embed(a.resourcePerson?.photo);
+    if (maybeResourcePhoto) children.push(maybeResourcePhoto);
+
+    (a.photos || []).forEach(p => {
+      const m = embed(p);
+      if (m) children.push(m);
+    });
+
+    // also embed attendance images if present
+    (a.attendanceImages || []).forEach(p => {
+      const m = embed(p);
+      if (m) children.push(m);
+    });
 
     children.push(new Paragraph("Feedback"));
     children.push(new Paragraph(a.feedback || ""));
@@ -603,7 +506,7 @@ export const getDocx = async (req, res) => {
     const buffer = await Packer.toBuffer(doc);
 
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-    res.setHeader("Content-Disposition", `attachment; filename="${a.activityName}.docx"`);
+    res.setHeader("Content-Disposition", `attachment; filename="${(a.activityName || 'report').replace(/[^a-z0-9_\-\.]/gi,'_')}.docx"`);
     res.send(buffer);
 
   } catch (err) {
@@ -621,11 +524,79 @@ export const listActivities = async (req, res) => {
 };
 
 export const approveActivity = async (req, res) => {
-  const a = await Activity.findByIdAndUpdate(req.params.id, { status: "approved" }, { new: true });
-  res.json(a);
+  try {
+    const activity = await Activity.findByIdAndUpdate(
+      req.params.id,
+      {
+        status: "approved",
+        approvedBy: req.user?._id || null,
+        approvedAt: new Date()
+      },
+      { new: true }
+    );
+
+    if (!activity) return res.status(404).json({ message: "Activity not found" });
+
+    res.json({ message: "Approved successfully", activity });
+  } catch (err) {
+    console.error("APPROVE ERROR:", err);
+    res.status(500).json({ message: "Approval failed", error: err.message });
+  }
 };
 
 export const rejectActivity = async (req, res) => {
-  const a = await Activity.findByIdAndUpdate(req.params.id, { status: "rejected" }, { new: true });
-  res.json(a);
+  try {
+    const activity = await Activity.findByIdAndUpdate(
+      req.params.id,
+      {
+        status: "rejected",
+        rejectedBy: req.user?._id || null,
+        rejectedAt: new Date()
+      },
+      { new: true }
+    );
+
+    if (!activity) return res.status(404).json({ message: "Activity not found" });
+
+    res.json({ message: "Rejected successfully", activity });
+  } catch (err) {
+    console.error("REJECT ERROR:", err);
+    res.status(500).json({ message: "Rejection failed", error: err.message });
+  }
 };
+
+
+// //previewreport code
+
+// export const getPreviewHtml = async (req, res) => {
+//   try {
+//     const a = await Activity.findById(req.params.id).lean();
+//     if (!a) return res.status(404).send("Not found");
+
+//     let html = loadTemplate();
+
+//     html = html.replace(/{{cssPath}}/g, CSS_PATH.replace(/\\/g, "/"));
+//     html = html.replace(/{{headerImage}}/g, toBase64(HEADER_PATH));
+
+//     // same replacements as PDF
+//     html = html.replace(/{{reportTitle}}/g, a.reportType || "");
+//     html = html.replace(/{{academicYear}}/g, a.academicYear || "");
+//     html = html.replace(/{{activityName}}/g, a.activityName || "");
+//     html = html.replace(/{{coordinator}}/g, a.coordinator || "");
+//     html = html.replace(/{{date}}/g, a.date || "");
+//     html = html.replace(/{{duration}}/g, a.duration || "");
+//     html = html.replace(/{{poPos}}/g, a.poPos || "");
+
+//     html = html.replace(/{{invitationImage}}/g, toDataUrl(a.invitation));
+//     html = html.replace(/{{posterImage}}/g, toDataUrl(a.poster));
+//     html = html.replace(/{{resourcePhoto}}/g, toDataUrl(a.resourcePerson?.photo));
+
+//     // reuse SAME attendancePages + photoPages logic as PDF
+//     // (you can literally copy-paste from getPdf)
+
+//     res.send(html);
+//   } catch (err) {
+//     console.error("PREVIEW ERROR:", err);
+//     res.status(500).send("Preview failed");
+//   }
+// };

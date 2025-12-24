@@ -1,9 +1,14 @@
+
+
+//server/src/server.js
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { connectDB } from "./config/db.js";
 import path from "path";
 import { fileURLToPath } from "url";
+
+
 
 dotenv.config();
 
@@ -35,8 +40,19 @@ connectDB();
 import authRoutes from "./routes/authRoutes.js";
 import activityRoutes from "./routes/activityRoutes.js";
 
+
+import homeContentRoutes from "./routes/homeContentRoutes.js";
+import statsRoutes from "./routes/statsRoutes.js";
+import departmentRoutes from "./routes/departmentRoutes.js";
+
+
 app.use("/api/auth", authRoutes);
 app.use("/api/activity", activityRoutes);
+
+
+app.use("/api/home-content", homeContentRoutes);
+app.use("/api/stats", statsRoutes);
+app.use("/api/departments", departmentRoutes);
 
 // ---------- Test Route ----------
 app.get("/", (req, res) => {

@@ -1,4 +1,8 @@
-// src/routes/activityRoutes.js
+
+
+
+
+// server/src/routes/activityRoutes.js
 import express from "express";
 import multer from "multer";
 import path from "path";
@@ -9,7 +13,7 @@ import fs from "fs";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Uploads directory (correct!)
+// Uploads directory -> server/src/uploads (one level above routes)
 const uploadsDir = path.join(__dirname, "..", "uploads");
 
 if (!fs.existsSync(uploadsDir)) {
@@ -32,7 +36,10 @@ const cpUpload = upload.fields([
   { name: "poster", maxCount: 1 },
   { name: "resourcePhoto", maxCount: 1 },
   { name: "attendanceFile", maxCount: 1 },
-  { name: "photos", maxCount: 20 }
+  { name: "attendanceImages", maxCount: 20 },  
+  { name: "photos", maxCount: 20 },
+  { name: "feedbackImages", maxCount: 20 }
+
 ]);
 
 // Controllers
@@ -85,6 +92,24 @@ router.get(
     res.json(list);
   }
 );
+//new add-on
+
+// GET reports by department
+router.get("/department/:code", authMiddleware, async (req, res) => {
+  try {
+    const reports = await Activity.find({
+      department: req.params.code
+    }).sort({ createdAt: -1 });
+
+    res.json(reports);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch reports" });
+  }
+});
+
+
+
+
 
 /* ============================================================
       ADMIN / HOD / PRINCIPAL ROUTES
@@ -126,5 +151,6 @@ router.get("/:id/pdf", authMiddleware, getPdf);
 
 // DOCX download
 router.get("/:id/docx", authMiddleware, getDocx);
+
 
 export default router;

@@ -1,17 +1,48 @@
+
+
+
+
+
+
+// client/src/pages/Faculty/CreateReport.jsx
+
 import React, { useState, useContext } from "react";
+import {
+  Box,
+  Grid,
+  Paper,
+  Typography,
+  TextField,
+  MenuItem,
+  Button,
+  Stepper,
+  Step,
+  StepLabel,
+} from "@mui/material";
+import { CloudUpload as UploadIcon, ArrowBack, ArrowForward } from "@mui/icons-material";
 import axiosClient from "../../utils/axiosClient";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
+
+const steps = [
+  "Activity Details",
+  "Invitation",
+  "Poster",
+  "Resource Person",
+  "Session Report",
+  "Attendance",
+  "Photos",
+  "Feedback",
+  "Review & Submit",
+];
 
 export default function CreateReport() {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
 
-  const [step, setStep] = useState(1);
+  const [activeStep, setActiveStep] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
 
-  // ===============================
-  // FORM STATE (includes academicYear)
-  // ===============================
   const [form, setForm] = useState({
     reportType: "conducted",
     academicYear: "",
@@ -26,262 +57,561 @@ export default function CreateReport() {
     resourceDesignation: "",
     resourceInstitution: "",
 
-    // session
+    // session fields (new)
+    sessionName: "",
+    coordinatorsText: "", // comma-separated for UI
+    googleMeetLink: "",
+    intendedParticipants: "",
+    categoryOfEvent: "",
+    sessionDate: "",
+
+    // summary & counts
     sessionSummary: "",
     participantsCount: "",
     facultyCount: "",
 
     // feedback
-    feedback: ""
+    feedback: "",
   });
 
-  // ===============================
-  // FILES
-  // ===============================
+  // Files state
   const [files, setFiles] = useState({
     invitation: null,
     poster: null,
     resourcePhoto: null,
-    attendanceFile: null,
-    photos: []
+    attendanceFile: null,      // single pdf/xlsx fallback
+    attendanceImages: [],     // multiple attendance images
+    photos: [],
+    feedbackImages: [],  
   });
 
-  // ===============================
-  // PREVIEWS
-  // ===============================
+  // Previews (for images)
   const [previews, setPreviews] = useState({
     invitation: null,
     poster: null,
     resourcePhoto: null,
-    photos: []
+    attendanceImages: [],
+    photos: [],
+    feedbackImages: [],  
   });
 
-  const onFileChange = (e, key) => {
+  const handleFile = (e, key) => {
     const f = e.target.files[0];
-    setFiles(prev => ({ ...prev, [key]: f }));
-    if (f) setPreviews(prev => ({ ...prev, [key]: URL.createObjectURL(f) }));
+    setFiles((p) => ({ ...p, [key]: f }));
+    if (f) setPreviews((p) => ({ ...p, [key]: URL.createObjectURL(f) }));
   };
 
-  const onMultiple = (e) => {
-    const arr = Array.from(e.target.files);
-    setFiles(prev => ({ ...prev, photos: arr }));
-    setPreviews(prev => ({ ...prev, photos: arr.map(a => URL.createObjectURL(a)) }));
+  // multiple attendance images handler
+  const handleAttendanceMultiple = (e) => {
+    const arr = Array.from(e.target.files || []);
+    setFiles((p) => ({ ...p, attendanceImages: arr }));
+    setPreviews((p) => ({ ...p, attendanceImages: arr.map((f) => URL.createObjectURL(f)) }));
   };
 
-  const next = () => setStep(s => Math.min(8, s + 1));
-  const prev = () => setStep(s => Math.max(1, s - 1));
+  // other multiple photos handler
+  const handleMultiple = (e) => {
+    const arr = Array.from(e.target.files || []);
+    setFiles((p) => ({ ...p, photos: arr }));
+    setPreviews((p) => ({ ...p, photos: arr.map((f) => URL.createObjectURL(f)) }));
+  };
 
-  // ===============================
-  // SUBMIT HANDLER (academicYear included)
-  // ===============================
+// multiple feedback images handler
+const handleFeedbackMultiple = (e) => {
+  const arr = Array.from(e.target.files || []);
+  setFiles((p) => ({ ...p, feedbackImages: arr }));
+  setPreviews((p) => ({
+    ...p,
+    feedbackImages: arr.map((f) => URL.createObjectURL(f)),
+  }));
+};
+
+
+  const next = () => setActiveStep((s) => Math.min(steps.length - 1, s + 1));
+  const prev = () => setActiveStep((s) => Math.max(0, s - 1));
+
+  const validateStep = (stepIdx) => {
+    if (stepIdx === 0) {
+      if (!form.academicYear?.trim()) return "Academic Year is required";
+      if (!form.activityName?.trim()) return "Activity Name is required";
+    }
+    return null;
+  };
+
   const submit = async () => {
+    const err = validateStep(0);
+    if (err) return alert(err);
+
     try {
+      setSubmitting(true);
+
       const fd = new FormData();
 
-      // --- Payload with academic year included ---
+      // coordinators array from comma separated text
+      const coordinatorsArr = form.coordinatorsText
+        ? form.coordinatorsText.split(",").map((s) => s.trim()).filter(Boolean)
+        : [];
+
       const payload = {
         ...form,
         academicYear: form.academicYear,
         resourcePerson: {
           name: form.resourceName,
           designation: form.resourceDesignation,
-          institution: form.resourceInstitution
+          institution: form.resourceInstitution,
         },
         sessionReport: {
+          sessionName: form.sessionName,
+          coordinators: coordinatorsArr,
+          googleMeetLink: form.googleMeetLink,
+          intendedParticipants: form.intendedParticipants,
+          categoryOfEvent: form.categoryOfEvent,
+          date: form.sessionDate,
           summary: form.sessionSummary,
           participantsCount: form.participantsCount,
-          facultyCount: form.facultyCount
+          facultyCount: form.facultyCount,
         },
         createdBy: user?.id,
-        status: "pending"
+        status: "pending",
       };
 
       fd.append("payload", JSON.stringify(payload));
 
-      // Files
+      // single files
       if (files.invitation) fd.append("invitation", files.invitation);
       if (files.poster) fd.append("poster", files.poster);
       if (files.resourcePhoto) fd.append("resourcePhoto", files.resourcePhoto);
-      if (files.attendanceFile) fd.append("attendanceFile", files.attendanceFile);
 
-      (files.photos || []).forEach(p => fd.append("photos", p));
+ 
+// ✅ attendance IMAGES (multiple)
+(files.attendanceImages || []).forEach((img) => {
+  fd.append("attendanceImages", img);
+});
+
+// photos
+(files.photos || []).forEach((p) => {
+  fd.append("photos", p);
+});
+
+// feedback images
+(files.feedbackImages || []).forEach((img) => {
+  fd.append("feedbackImages", img);
+});
+
 
       const res = await axiosClient.post("/activity", fd, {
-        headers: { "Content-Type": "multipart/form-data" }
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
       alert("Saved successfully");
-      navigate(`/faculty/report/${res.data._id}`);
-
+      // navigate(`/faculty/report/${res.data._id}`);
+      navigate(`/faculty/report/${res.data._id}/preview`);
+      
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Save failed");
+      alert(err?.response?.data?.message || "Save failed");
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  // ===============================
-  // UI
-  // ===============================
   return (
-    <div style={{ maxWidth: 900, margin: "20px auto" }}>
-      <h2>Create Activity Report</h2>
+    <Box sx={{ maxWidth: 1100, mx: "auto", p: 2 }}>
+      <Paper sx={{ p: 3 }}>
+        <Typography variant="h5" sx={{ mb: 2, fontWeight: 700 }}>
+          Create Activity Report
+        </Typography>
 
-      <div style={{ marginBottom: 12 }}>
-        <strong>Step {step} of 8</strong>
-      </div>
+        <Stepper activeStep={activeStep} sx={{ mb: 3 }} alternativeLabel>
+          {steps.map((s) => (
+            <Step key={s}>
+              <StepLabel>{s}</StepLabel>
+            </Step>
+          ))}
+        </Stepper>
 
-      {/* ---------------- Step 1 ---------------- */}
-      {step === 1 && (
-        <div>
-          <h3>1. Activity Details</h3>
+        {/* Step content */}
+        {activeStep === 0 && (
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                select
+                label="Report Type"
+                fullWidth
+                value={form.reportType}
+                onChange={(e) => setForm({ ...form, reportType: e.target.value })}
+              >
+                <MenuItem value="conducted">Activity Conducted Report</MenuItem>
+                <MenuItem value="attended">Activity Attended Report</MenuItem>
+                <MenuItem value="expert_talk">Activity Expert Talk</MenuItem>
+              </TextField>
+            </Grid>
 
-          <label>Report Type</label>
-          <select value={form.reportType} onChange={e => setForm({ ...form, reportType: e.target.value })}>
-            <option value="conducted">Activity Conducted Report</option>
-            <option value="attended">Activity Attended Report</option>
-            <option value="expert_talk">Activity Expert Talk</option>
-          </select>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Academic Year (e.g. 2025-26) *"
+                fullWidth
+                value={form.academicYear}
+                onChange={(e) => setForm({ ...form, academicYear: e.target.value })}
+                required
+              />
+            </Grid>
 
-          <label>Academic Year (e.g. 2025-26) *</label>
-          <input
-            required
-            value={form.academicYear}
-            onChange={e => setForm({ ...form, academicYear: e.target.value })}
-          />
+            <Grid item xs={12}>
+              <TextField
+                label="Activity Name *"
+                fullWidth
+                value={form.activityName}
+                onChange={(e) => setForm({ ...form, activityName: e.target.value })}
+                required
+              />
+            </Grid>
 
-          <label>Activity Name *</label>
-          <input
-            required
-            value={form.activityName}
-            onChange={e => setForm({ ...form, activityName: e.target.value })}
-          />
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Coordinator"
+                fullWidth
+                value={form.coordinator}
+                onChange={(e) => setForm({ ...form, coordinator: e.target.value })}
+              />
+            </Grid>
 
-          <label>Coordinator</label>
-          <input value={form.coordinator} onChange={e => setForm({ ...form, coordinator: e.target.value })} />
+            <Grid item xs={12} md={3}>
+              <TextField
+                label="Date"
+                type="date"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                value={form.date}
+                onChange={(e) => setForm({ ...form, date: e.target.value })}
+              />
+            </Grid>
 
-          <label>Date</label>
-          <input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
+            <Grid item xs={12} md={3}>
+              <TextField
+                label="Duration"
+                fullWidth
+                value={form.duration}
+                onChange={(e) => setForm({ ...form, duration: e.target.value })}
+              />
+            </Grid>
 
-          <label>Duration</label>
-          <input value={form.duration} onChange={e => setForm({ ...form, duration: e.target.value })} />
+            <Grid item xs={12}>
+              <TextField
+                label="PO & POs"
+                fullWidth
+                value={form.poPos}
+                onChange={(e) => setForm({ ...form, poPos: e.target.value })}
+              />
+            </Grid>
+          </Grid>
+        )}
 
-          <label>PO & POs</label>
-          <input value={form.poPos} onChange={e => setForm({ ...form, poPos: e.target.value })} />
-        </div>
-      )}
+        {activeStep === 1 && (
+          <Box>
+            <Typography variant="h6" sx={{ mb: 1 }}>
+              Invitation
+            </Typography>
+            <Button variant="outlined" component="label" startIcon={<UploadIcon />}>
+              Upload Invitation
+              <input hidden type="file" accept="image/*" onChange={(e) => handleFile(e, "invitation")} />
+            </Button>
 
-      {/* ---------------- Step 2 ---------------- */}
-      {step === 2 && (
-        <div>
-          <h3>2. Invitation</h3>
-          <input type="file" accept="image/*" onChange={(e) => onFileChange(e, "invitation")} />
-          {previews.invitation && <img src={previews.invitation} style={{ width: 260, marginTop: 8 }} />}
-        </div>
-      )}
+            {previews.invitation && (
+              <Box sx={{ mt: 2 }}>
+                <img src={previews.invitation} alt="inv" style={{ maxWidth: 360 }} />
+              </Box>
+            )}
+          </Box>
+        )}
 
-      {/* ---------------- Step 3 ---------------- */}
-      {step === 3 && (
-        <div>
-          <h3>3. Poster</h3>
-          <input type="file" accept="image/*" onChange={(e) => onFileChange(e, "poster")} />
-          {previews.poster && <img src={previews.poster} style={{ width: 260, marginTop: 8 }} />}
-        </div>
-      )}
+        {activeStep === 2 && (
+          <Box>
+            <Typography variant="h6" sx={{ mb: 1 }}>
+              Poster
+            </Typography>
+            <Button variant="outlined" component="label" startIcon={<UploadIcon />}>
+              Upload Poster
+              <input hidden type="file" accept="image/*" onChange={(e) => handleFile(e, "poster")} />
+            </Button>
 
-      {/* ---------------- Step 4 ---------------- */}
-      {step === 4 && (
-        <div>
-          <h3>4. Resource Person Details</h3>
+            {previews.poster && (
+              <Box sx={{ mt: 2 }}>
+                <img src={previews.poster} alt="poster" style={{ maxWidth: 360 }} />
+              </Box>
+            )}
+          </Box>
+        )}
 
-          <label>Name</label>
-          <input value={form.resourceName} onChange={e => setForm({ ...form, resourceName: e.target.value })} />
+        {activeStep === 3 && (
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Resource Name"
+                fullWidth
+                value={form.resourceName}
+                onChange={(e) => setForm({ ...form, resourceName: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <TextField
+                label="Designation"
+                fullWidth
+                value={form.resourceDesignation}
+                onChange={(e) => setForm({ ...form, resourceDesignation: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <TextField
+                label="Institution"
+                fullWidth
+                value={form.resourceInstitution}
+                onChange={(e) => setForm({ ...form, resourceInstitution: e.target.value })}
+              />
+            </Grid>
 
-          <label>Designation</label>
-          <input value={form.resourceDesignation} onChange={e => setForm({ ...form, resourceDesignation: e.target.value })} />
+            <Grid item xs={12}>
+              <Button variant="outlined" component="label" startIcon={<UploadIcon />}>
+                Upload Resource Photo
+                <input hidden type="file" accept="image/*" onChange={(e) => handleFile(e, "resourcePhoto")} />
+              </Button>
 
-          <label>Institution</label>
-          <input value={form.resourceInstitution} onChange={e => setForm({ ...form, resourceInstitution: e.target.value })} />
+              {previews.resourcePhoto && (
+                <Box sx={{ mt: 2 }}>
+                  <img src={previews.resourcePhoto} alt="rp" style={{ width: 120 }} />
+                </Box>
+              )}
+            </Grid>
+          </Grid>
+        )}
 
-          <label>Photo</label>
-          <input type="file" accept="image/*" onChange={(e) => onFileChange(e, "resourcePhoto")} />
-          {previews.resourcePhoto && <img src={previews.resourcePhoto} style={{ width: 120, marginTop: 8 }} />}
-        </div>
-      )}
+        {activeStep === 4 && (
+          <Box>
+            <Typography variant="h6" sx={{ mb: 1 }}>
+              Session Report
+            </Typography>
 
-      {/* ---------------- Step 5 ---------------- */}
-      {step === 5 && (
-        <div>
-          <h3>5. Session Report</h3>
-          <label>Summary</label>
-          <textarea rows={6} value={form.sessionSummary} onChange={e => setForm({ ...form, sessionSummary: e.target.value })} />
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  label="Session Name"
+                  fullWidth
+                  value={form.sessionName}
+                  onChange={(e) => setForm({ ...form, sessionName: e.target.value })}
+                />
+              </Grid>
 
-          <label>No. of Students Present</label>
-          <input type="number" value={form.participantsCount} onChange={e => setForm({ ...form, participantsCount: e.target.value })} />
+              <Grid item xs={12}>
+                <TextField
+                  label="Co-ordinator(s) (comma separated)"
+                  fullWidth
+                  value={form.coordinatorsText}
+                  onChange={(e) => setForm({ ...form, coordinatorsText: e.target.value })}
+                  helperText="Enter multiple names separated by commas"
+                />
+              </Grid>
 
-          <label>No. of Faculty Present</label>
-          <input type="number" value={form.facultyCount} onChange={e => setForm({ ...form, facultyCount: e.target.value })} />
-        </div>
-      )}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  label="Google Meet / Link"
+                  fullWidth
+                  value={form.googleMeetLink}
+                  onChange={(e) => setForm({ ...form, googleMeetLink: e.target.value })}
+                />
+              </Grid>
 
-      {/* ---------------- Step 6 ---------------- */}
-      {step === 6 && (
-        <div>
-          <h3>6. Attendance</h3>
-          <input
-            type="file"
-            accept=".pdf,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            onChange={(e) => onFileChange(e, "attendanceFile")}
-          />
-          {files.attendanceFile && <div style={{ marginTop: 8 }}>{files.attendanceFile.name}</div>}
-        </div>
-      )}
+              <Grid item xs={12} md={3}>
+                <TextField
+                  label="Intended Participants"
+                  fullWidth
+                  value={form.intendedParticipants}
+                  onChange={(e) => setForm({ ...form, intendedParticipants: e.target.value })}
+                />
+              </Grid>
 
-      {/* ---------------- Step 7 ---------------- */}
-      {step === 7 && (
-        <div>
-          <h3>7. Photos</h3>
-          <input type="file" accept="image/*" multiple onChange={onMultiple} />
-          <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
-            {previews.photos.map((p, i) => (
-              <img key={i} src={p} style={{ width: 120 }} />
-            ))}
-          </div>
-        </div>
-      )}
+              <Grid item xs={12} md={3}>
+                <TextField
+                  label="Category of Event"
+                  fullWidth
+                  value={form.categoryOfEvent}
+                  onChange={(e) => setForm({ ...form, categoryOfEvent: e.target.value })}
+                />
+              </Grid>
 
-      {/* ---------------- Step 8 ---------------- */}
-      {step === 8 && (
-        <div>
-          <h3>Review & Feedback</h3>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  label="Session Date"
+                  type="date"
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  value={form.sessionDate}
+                  onChange={(e) => setForm({ ...form, sessionDate: e.target.value })}
+                />
+              </Grid>
 
-          <div><strong>Activity Name:</strong> {form.activityName}</div>
-          <div><strong>Coordinator:</strong> {form.coordinator}</div>
-          <div><strong>Academic Year:</strong> {form.academicYear}</div>
+              <Grid item xs={12}>
+                <TextField
+                  multiline
+                  rows={5}
+                  label="Summary"
+                  fullWidth
+                  value={form.sessionSummary}
+                  onChange={(e) => setForm({ ...form, sessionSummary: e.target.value })}
+                />
+              </Grid>
 
-          <label style={{ marginTop: 12 }}>Feedback</label>
-          <textarea
-            rows={4}
-            value={form.feedback}
-            onChange={e => setForm({ ...form, feedback: e.target.value })}
-          />
+              <Grid item xs={12} md={6}>
+                <TextField
+                  label="No. of Students Present"
+                  type="number"
+                  fullWidth
+                  value={form.participantsCount}
+                  onChange={(e) => setForm({ ...form, participantsCount: e.target.value })}
+                />
+              </Grid>
 
-          <div style={{ marginTop: 16 }}>
-            <button onClick={submit}>Save & Finish</button>
-            <button
-              onClick={() => alert("After saving you can download PDF/DOCX from the report view.")}
-              style={{ marginLeft: 8 }}
-            >
-              Note
-            </button>
-          </div>
-        </div>
-      )}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  label="No. of Faculty Present"
+                  type="number"
+                  fullWidth
+                  value={form.facultyCount}
+                  onChange={(e) => setForm({ ...form, facultyCount: e.target.value })}
+                />
+              </Grid>
+            </Grid>
+          </Box>
+        )}
 
-      {/* Navigation Buttons */}
-      <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
-        {step > 1 && <button onClick={prev}>Previous</button>}
-        {step < 8 && <button onClick={next}>Next</button>}
-      </div>
-    </div>
+  {activeStep === 5 && (
+  <Box>
+    <Typography variant="h6" sx={{ mb: 1 }}>
+      Attendance (Upload Images)
+    </Typography>
+
+    <Button variant="outlined" component="label" startIcon={<UploadIcon />}>
+      Upload Attendance Images (multiple)
+      <input
+        hidden
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={handleAttendanceMultiple}
+      />
+    </Button>
+
+    <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 2 }}>
+      {previews.attendanceImages.map((img, i) => (
+        <img
+          key={i}
+          src={img}
+          alt={`attendance-${i}`}
+          style={{ width: 120, borderRadius: 6 }}
+        />
+      ))}
+    </Box>
+  </Box>
+)}
+
+        {activeStep === 6 && (
+          <Box>
+            <Typography variant="h6" sx={{ mb: 1 }}>
+              Photos
+            </Typography>
+
+            <Button variant="outlined" component="label" startIcon={<UploadIcon />}>
+              Upload Photos (multiple)
+              <input hidden type="file" accept="image/*" multiple onChange={handleMultiple} />
+            </Button>
+
+            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 2 }}>
+              {previews.photos.map((p, i) => (
+                <img key={i} src={p} alt={`photo-${i}`} style={{ width: 120, borderRadius: 6 }} />
+              ))}
+            </Box>
+          </Box>
+        )}
+{activeStep === 7 && (
+  <Box>
+    <Typography variant="h6" sx={{ mb: 1 }}>
+      Feedback (Upload Images)
+    </Typography>
+
+    <Button variant="outlined" component="label" startIcon={<UploadIcon />}>
+      Upload Feedback Images (multiple)
+      <input
+        hidden
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={handleFeedbackMultiple}
+      />
+    </Button>
+
+    <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 2 }}>
+      {previews.feedbackImages.map((img, i) => (
+        <img
+          key={i}
+          src={img}
+          alt={`feedback-${i}`}
+          style={{ width: 120, borderRadius: 6 }}
+        />
+      ))}
+    </Box>
+  </Box>
+)}
+
+
+
+
+        {activeStep === 8 && (
+          <Box>
+            <Typography variant="h6" sx={{ mb: 1 }}>
+              Review & Feedback
+            </Typography>
+
+            <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                {form.activityName || "(No title)"}
+              </Typography>
+              <Typography variant="body2">Academic Year: {form.academicYear}</Typography>
+              <Typography variant="body2">Coordinator: {form.coordinator}</Typography>
+
+              <Typography sx={{ mt: 1, fontWeight: 600 }}>Session Summary</Typography>
+              <Typography variant="body2">{form.sessionSummary || "-"}</Typography>
+            </Paper>
+
+            <TextField
+              multiline
+              rows={3}
+              label="Feedback / Notes (optional)"
+              fullWidth
+              value={form.feedback}
+              onChange={(e) => setForm({ ...form, feedback: e.target.value })}
+            />
+          </Box>
+        )}
+
+        {/* Navigation */}
+        <Box sx={{ display: "flex", justifyContent: "space-between", mt: 3 }}>
+          <Box>
+            <Button startIcon={<ArrowBack />} disabled={activeStep === 0} onClick={prev}>
+              Previous
+            </Button>
+          </Box>
+
+          <Box>
+            {activeStep < steps.length - 1 ? (
+              <Button variant="contained" endIcon={<ArrowForward />} onClick={next}>
+                Next
+              </Button>
+            ) : (
+              <Button variant="contained" onClick={submit} disabled={submitting}>
+                {submitting ? "Saving..." : "Save & Finish"}
+              </Button>
+            )}
+          </Box>
+        </Box>
+      </Paper>
+    </Box>
   );
 }
