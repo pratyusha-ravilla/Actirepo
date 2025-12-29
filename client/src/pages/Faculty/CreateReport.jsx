@@ -1,9 +1,6 @@
 
 
 
-
-
-
 // client/src/pages/Faculty/CreateReport.jsx
 
 import React, { useState, useContext } from "react";

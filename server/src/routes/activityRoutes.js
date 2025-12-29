@@ -146,6 +146,9 @@ router.put(
 // Fetch single report
 router.get("/:id", authMiddleware, getActivity);
 
+//new update
+router.put("/:id", authMiddleware, updateActivity);
+
 // PDF download
 router.get("/:id/pdf", authMiddleware, getPdf);
 

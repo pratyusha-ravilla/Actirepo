@@ -34,7 +34,7 @@ import FacultyList from "./pages/Admin/FacultyList.jsx";
 import UsersList from "./pages/Admin/UsersList.jsx"; // generic list (if needed)
 import AddUser from "./pages/Admin/AddUser.jsx"; // optional: create page to add users
 // //preview page
-// import ReportPreview from "./pages/Faculty/PreviewReport.jsx";
+import ReportPreview from "./pages/Faculty/PreviewReport.jsx";
 
 //new add-on
 import DepartmentReports from "./pages/DepartmentReports.jsx";
@@ -92,10 +92,10 @@ export default function App() {
         />
 
 
-       {/* <Route
+       <Route
   path="/faculty/report/:id/preview"
   element={<ReportPreview />}
-/> */}
+/>
 
 
         

@@ -1,3 +1,6 @@
+//client/src/pages/DepartmentReports.jsx
+
+
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axiosClient from "../utils/axiosClient";

@@ -1,602 +1,25 @@
 
 
 
-
-
-// // client/src/pages/Faculty/EditReport.jsx
-
-// import React, { useEffect, useState, useContext } from "react";
-// import {
-//   Box,
-//   Paper,
-//   Typography,
-//   TextField,
-//   Button,
-//   Grid,
-// } from "@mui/material";
-// import axiosClient from "../../utils/axiosClient";
-// import { useParams, useNavigate } from "react-router-dom";
-// import { AuthContext } from "../../context/AuthContext";
-
-// export default function EditReport() {
-//   const { id } = useParams();
-//   const navigate = useNavigate();
-//   const { user } = useContext(AuthContext);
-
-//   const [loading, setLoading] = useState(true);
-//   const [saving, setSaving] = useState(false);
-
-//   const [form, setForm] = useState({
-//     reportType: "conducted",
-//     academicYear: "",
-//     activityName: "",
-//     coordinator: "",
-//     date: "",
-//     duration: "",
-//     poPos: "",
-//     resourceName: "",
-//     resourceDesignation: "",
-//     resourceInstitution: "",
-//     sessionSummary: "",
-//     participantsCount: "",
-//     facultyCount: "",
-//     feedback: "",
-//   });
-
-//   const [previews, setPreviews] = useState({ invitation: null, poster: null, resourcePhoto: null, photos: [] });
-//   const [existing, setExisting] = useState({ invitation: null, poster: null, resourcePhoto: null, photos: [] });
-
-//   useEffect(() => {
-//     const load = async () => {
-//       try {
-//         setLoading(true);
-//         const res = await axiosClient.get(`/activity/${id}`);
-//         const data = res.data;
-
-//         setForm({
-//           reportType: data.reportType || "conducted",
-//           academicYear: data.academicYear || "",
-//           activityName: data.activityName || "",
-//           coordinator: data.coordinator || "",
-//           date: data.date || "",
-//           duration: data.duration || "",
-//           poPos: data.poPos || "",
-//           resourceName: data.resourcePerson?.name || "",
-//           resourceDesignation: data.resourcePerson?.designation || "",
-//           resourceInstitution: data.resourcePerson?.institution || "",
-//           sessionSummary: data.sessionReport?.summary || "",
-//           participantsCount: data.sessionReport?.participantsCount || "",
-//           facultyCount: data.sessionReport?.facultyCount || "",
-//           feedback: data.feedback || "",
-//         });
-
-//         const base = axiosClient.defaults.baseURL.replace("/api", "");
-//         setExisting({
-//           invitation: data.invitation ? `${base}/${data.invitation}` : null,
-//           poster: data.poster ? `${base}/${data.poster}` : null,
-//           resourcePhoto: data.resourcePerson?.photo ? `${base}/${data.resourcePerson.photo}` : null,
-//           photos: (data.photos || []).map((p) => `${base}/${p}`),
-//         });
-//       } catch (err) {
-//         console.error(err);
-//         alert("Failed to load report");
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-//     load();
-//   }, [id]);
-
-//   const previewFile = (e, key) => {
-//     const f = e.target.files[0];
-//     if (!f) return;
-//     setPreviews((p) => ({ ...p, [key]: URL.createObjectURL(f) }));
-//   };
-
-//   const previewMultiple = (e) => {
-//     const arr = Array.from(e.target.files);
-//     setPreviews((p) => ({ ...p, photos: arr.map((f) => URL.createObjectURL(f)) }));
-//   };
-
-//   const handleUpdate = async (e) => {
-//     e.preventDefault();
-//     try {
-//       setSaving(true);
-//       const fd = new FormData();
-//       const payload = {
-//         ...form,
-//         updatedBy: user?.id,
-//       };
-//       fd.append("payload", JSON.stringify(payload));
-
-//       if (e.target.invitation?.files?.[0]) fd.append("invitation", e.target.invitation.files[0]);
-//       if (e.target.poster?.files?.[0]) fd.append("poster", e.target.poster.files[0]);
-//       if (e.target.resourcePhoto?.files?.[0]) fd.append("resourcePhoto", e.target.resourcePhoto.files[0]);
-//       if (e.target.attendanceFile?.files?.[0]) fd.append("attendanceFile", e.target.attendanceFile.files[0]);
-
-//       const photos = e.target.photos?.files || [];
-//       for (let i = 0; i < photos.length; i++) fd.append("photos", photos[i]);
-
-//       await axiosClient.put(`/activity/${id}`, fd, {
-//         headers: { "Content-Type": "multipart/form-data" },
-//       });
-
-//       alert("Report updated");
-//       navigate(`/faculty/report/${id}`);
-//     } catch (err) {
-//       console.error(err);
-//       alert(err?.response?.data?.message || "Update failed");
-//     } finally {
-//       setSaving(false);
-//     }
-//   };
-
-//   if (loading) return <Box sx={{ p: 4 }}>Loading...</Box>;
-
-//   return (
-//     <Box sx={{ maxWidth: 1000, mx: "auto", p: 2 }}>
-//       <Paper sx={{ p: 3 }}>
-//         <Typography variant="h5" sx={{ mb: 2 }}>
-//           Edit Activity Report
-//         </Typography>
-
-//         <form onSubmit={handleUpdate}>
-//           <Grid container spacing={2}>
-//             <Grid item xs={12} md={6}>
-//               <TextField
-//                 select
-//                 label="Report Type"
-//                 value={form.reportType}
-//                 fullWidth
-//                 onChange={(e) => setForm({ ...form, reportType: e.target.value })}
-//               >
-//                 <MenuItem value="conducted">Conducted</MenuItem>
-//                 <MenuItem value="attended">Attended</MenuItem>
-//                 <MenuItem value="expert_talk">Expert Talk</MenuItem>
-//               </TextField>
-//             </Grid>
-
-//             <Grid item xs={12} md={6}>
-//               <TextField
-//                 label="Activity Name"
-//                 fullWidth
-//                 value={form.activityName}
-//                 onChange={(e) => setForm({ ...form, activityName: e.target.value })}
-//                 required
-//               />
-//             </Grid>
-
-//             <Grid item xs={12}>
-//               <TextField
-//                 label="Coordinator"
-//                 fullWidth
-//                 value={form.coordinator}
-//                 onChange={(e) => setForm({ ...form, coordinator: e.target.value })}
-//               />
-//             </Grid>
-
-//             <Grid item xs={12} md={4}>
-//               <TextField label="Date" type="date" InputLabelProps={{ shrink: true }} fullWidth value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
-//             </Grid>
-
-//             <Grid item xs={12} md={4}>
-//               <TextField label="Duration" fullWidth value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} />
-//             </Grid>
-
-//             <Grid item xs={12} md={4}>
-//               <TextField label="PO & POs" fullWidth value={form.poPos} onChange={(e) => setForm({ ...form, poPos: e.target.value })} />
-//             </Grid>
-
-//             <Grid item xs={12}>
-//               <Typography variant="subtitle1" sx={{ mb: 1 }}>Invitation</Typography>
-//               <input name="invitation" type="file" onChange={(e) => previewFile(e, "invitation")} />
-//               {previews.invitation ? <img src={previews.invitation} style={{ width: 200 }} /> : existing.invitation ? <img src={existing.invitation} style={{ width: 200 }} /> : null}
-//             </Grid>
-
-//             <Grid item xs={12}>
-//               <Typography variant="subtitle1" sx={{ mb: 1 }}>Poster</Typography>
-//               <input name="poster" type="file" onChange={(e) => previewFile(e, "poster")} />
-//               {previews.poster ? <img src={previews.poster} style={{ width: 200 }} /> : existing.poster ? <img src={existing.poster} style={{ width: 200 }} /> : null}
-//             </Grid>
-
-//             <Grid item xs={12}>
-//               <Typography variant="subtitle1">Resource Person</Typography>
-//               <Grid container spacing={2} sx={{ mt: 1 }}>
-//                 <Grid item xs={12} md={6}><TextField label="Name" fullWidth value={form.resourceName} onChange={(e) => setForm({ ...form, resourceName: e.target.value })} /></Grid>
-//                 <Grid item xs={12} md={3}><TextField label="Designation" fullWidth value={form.resourceDesignation} onChange={(e) => setForm({ ...form, resourceDesignation: e.target.value })} /></Grid>
-//                 <Grid item xs={12} md={3}><TextField label="Institution" fullWidth value={form.resourceInstitution} onChange={(e) => setForm({ ...form, resourceInstitution: e.target.value })} /></Grid>
-//               </Grid>
-
-//               <Box sx={{ mt: 1 }}>
-//                 <input name="resourcePhoto" type="file" onChange={(e) => previewFile(e, "resourcePhoto")} />
-//                 {previews.resourcePhoto ? <img src={previews.resourcePhoto} style={{ width: 120 }} /> : existing.resourcePhoto ? <img src={existing.resourcePhoto} style={{ width: 120 }} /> : null}
-//               </Box>
-//             </Grid>
-
-//             <Grid item xs={12}>
-//               <Typography variant="subtitle1">Session Report</Typography>
-//               <TextField multiline rows={4} fullWidth value={form.sessionSummary} onChange={(e) => setForm({ ...form, sessionSummary: e.target.value })} sx={{ mt: 1 }} />
-//             </Grid>
-
-//             <Grid item xs={12} md={6}>
-//               <TextField label="Students Present" type="number" fullWidth value={form.participantsCount} onChange={(e) => setForm({ ...form, participantsCount: e.target.value })} />
-//             </Grid>
-//             <Grid item xs={12} md={6}>
-//               <TextField label="Faculty Present" type="number" fullWidth value={form.facultyCount} onChange={(e) => setForm({ ...form, facultyCount: e.target.value })} />
-//             </Grid>
-
-//             <Grid item xs={12}>
-//               <Typography variant="subtitle1">Attendance File</Typography>
-//               <input name="attendanceFile" type="file" />
-//             </Grid>
-
-//             <Grid item xs={12}>
-//               <Typography variant="subtitle1">Event Photos</Typography>
-//               <input name="photos" type="file" multiple onChange={previewMultiple} />
-//               <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-//                 {previews.photos.length > 0 ? previews.photos.map((u, i) => <img key={i} src={u} style={{ width: 120 }} />) : existing.photos.map((u, i) => <img key={i} src={u} style={{ width: 120 }} />)}
-//               </Box>
-//             </Grid>
-
-//             <Grid item xs={12}>
-//               <TextField multiline rows={3} label="Feedback" fullWidth value={form.feedback} onChange={(e) => setForm({ ...form, feedback: e.target.value })} />
-//             </Grid>
-
-//             <Grid item xs={12} sx={{ display: "flex", gap: 1 }}>
-//               <Button variant="contained" type="submit" disabled={saving} onClick={handleUpdate}>{saving ? "Saving..." : "Update Report"}</Button>
-//               <Button variant="outlined" onClick={() => navigate(`/faculty/report/${id}`)}>Cancel</Button>
-//             </Grid>
-//           </Grid>
-//         </form>
-//       </Paper>
-//     </Box>
-//   );
-// }
-
-
-
-
-// // // client/src/pages/Faculty/EditReport.jsx
-
-// import React, { useEffect, useState, useContext } from "react";
-// import {
-//   Box,
-//   Paper,
-//   Typography,
-//   TextField,
-//   Button,
-//   Grid,
-// } from "@mui/material";
-// import axiosClient from "../../utils/axiosClient";
-// import { useParams, useNavigate } from "react-router-dom";
-// import { AuthContext } from "../../context/AuthContext";
-
-// export default function EditReport() {
-//   const { id } = useParams();
-//   const navigate = useNavigate();
-//   const { user } = useContext(AuthContext);
-
-//   const [loading, setLoading] = useState(true);
-//   const [saving, setSaving] = useState(false);
-
-//   const [form, setForm] = useState({
-//     reportType: "conducted",
-//     academicYear: "",
-//     activityName: "",
-//     coordinator: "",
-//     date: "",
-//     duration: "",
-//     poPos: "",
-//     resourceName: "",
-//     resourceDesignation: "",
-//     resourceInstitution: "",
-
-//     // session fields
-//     sessionName: "",
-//     coordinatorsText: "",
-//     googleMeetLink: "",
-//     intendedParticipants: "",
-//     categoryOfEvent: "",
-//     sessionDate: "",
-
-//     sessionSummary: "",
-//     participantsCount: "",
-//     facultyCount: "",
-
-//     feedback: "",
-//   });
-
-//   const [previews, setPreviews] = useState({ invitation: null, poster: null, resourcePhoto: null, photos: [] });
-//   const [existing, setExisting] = useState({ invitation: null, poster: null, resourcePhoto: null, photos: [] });
-
-//   useEffect(() => {
-//     const load = async () => {
-//       try {
-//         setLoading(true);
-//         const res = await axiosClient.get(`/activity/${id}`);
-//         const data = res.data;
-
-//         // sessionReport may be absent — use fallbacks
-//         const sr = data.sessionReport || {};
-
-//         // coordinators (array -> text)
-//         const coordsText = Array.isArray(sr.coordinators) ? sr.coordinators.join(", ") : (sr.coordinators || "");
-
-//         setForm({
-//           reportType: data.reportType || "conducted",
-//           academicYear: data.academicYear || "",
-//           activityName: data.activityName || "",
-//           coordinator: data.coordinator || "",
-//           date: data.date || "",
-//           duration: data.duration || "",
-//           poPos: data.poPos || "",
-//           resourceName: data.resourcePerson?.name || "",
-//           resourceDesignation: data.resourcePerson?.designation || "",
-//           resourceInstitution: data.resourcePerson?.institution || "",
-
-//           // session fields loaded
-//           sessionName: sr.sessionName || "",
-//           coordinatorsText: coordsText,
-//           googleMeetLink: sr.googleMeetLink || "",
-//           intendedParticipants: sr.intendedParticipants || "",
-//           categoryOfEvent: sr.categoryOfEvent || "",
-//           sessionDate: sr.date || "",
-
-//           sessionSummary: sr.summary || data.sessionReport?.summary || "",
-//           participantsCount: sr.participantsCount || data.sessionReport?.participantsCount || "",
-//           facultyCount: sr.facultyCount || data.sessionReport?.facultyCount || "",
-
-//           feedback: data.feedback || "",
-//         });
-
-//         const base = axiosClient.defaults.baseURL.replace("/api", "");
-//         setExisting({
-//           invitation: data.invitation ? `${base}/${data.invitation}` : null,
-//           poster: data.poster ? `${base}/${data.poster}` : null,
-//           resourcePhoto: data.resourcePerson?.photo ? `${base}/${data.resourcePerson.photo}` : null,
-//           photos: (data.photos || []).map((p) => `${base}/${p}`),
-//         });
-//       } catch (err) {
-//         console.error(err);
-//         alert("Failed to load report");
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-//     load();
-//   }, [id]);
-
-//   const previewFile = (e, key) => {
-//     const f = e.target.files[0];
-//     if (!f) return;
-//     setPreviews((p) => ({ ...p, [key]: URL.createObjectURL(f) }));
-//   };
-
-//   const previewMultiple = (e) => {
-//     const arr = Array.from(e.target.files);
-//     setPreviews((p) => ({ ...p, photos: arr.map((f) => URL.createObjectURL(f)) }));
-//   };
-
-//   const handleUpdate = async (e) => {
-//     e.preventDefault();
-//     try {
-//       setSaving(true);
-//       const fd = new FormData();
-
-//       // coordinatorsText -> array
-//       const coordinatorsArr = form.coordinatorsText
-//         ? form.coordinatorsText.split(",").map((s) => s.trim()).filter(Boolean)
-//         : [];
-
-//       const payload = {
-//         ...form,
-//         updatedBy: user?.id,
-//         // embed resourcePerson and sessionReport properly
-//         resourcePerson: {
-//           name: form.resourceName,
-//           designation: form.resourceDesignation,
-//           institution: form.resourceInstitution,
-//         },
-//         sessionReport: {
-//           sessionName: form.sessionName,
-//           coordinators: coordinatorsArr,
-//           googleMeetLink: form.googleMeetLink,
-//           intendedParticipants: form.intendedParticipants,
-//           categoryOfEvent: form.categoryOfEvent,
-//           date: form.sessionDate,
-//           summary: form.sessionSummary,
-//           participantsCount: form.participantsCount,
-//           facultyCount: form.facultyCount,
-//         },
-//       };
-
-//       fd.append("payload", JSON.stringify(payload));
-
-//       if (e.target.invitation?.files?.[0]) fd.append("invitation", e.target.invitation.files[0]);
-//       if (e.target.poster?.files?.[0]) fd.append("poster", e.target.poster.files[0]);
-//       if (e.target.resourcePhoto?.files?.[0]) fd.append("resourcePhoto", e.target.resourcePhoto.files[0]);
-//       if (e.target.attendanceFile?.files?.[0]) fd.append("attendanceFile", e.target.attendanceFile.files[0]);
-
-//       const photos = e.target.photos?.files || [];
-//       for (let i = 0; i < photos.length; i++) fd.append("photos", photos[i]);
-
-//       await axiosClient.put(`/activity/${id}`, fd, {
-//         headers: { "Content-Type": "multipart/form-data" },
-//       });
-
-//       alert("Report updated");
-//       navigate(`/faculty/report/${id}`);
-//     } catch (err) {
-//       console.error(err);
-//       alert(err?.response?.data?.message || "Update failed");
-//     } finally {
-//       setSaving(false);
-//     }
-//   };
-
-//   if (loading) return <Box sx={{ p: 4 }}>Loading...</Box>;
-
-//   return (
-//     <Box sx={{ maxWidth: 1000, mx: "auto", p: 2 }}>
-//       <Paper sx={{ p: 3 }}>
-//         <Typography variant="h5" sx={{ mb: 2 }}>
-//           Edit Activity Report
-//         </Typography>
-
-//         <form onSubmit={handleUpdate}>
-//           <Grid container spacing={2}>
-//             <Grid item xs={12} md={6}>
-//               <TextField
-//                 select
-//                 label="Report Type"
-//                 value={form.reportType}
-//                 fullWidth
-//                 onChange={(e) => setForm({ ...form, reportType: e.target.value })}
-//               >
-//                 <MenuItem value="conducted">Conducted</MenuItem>
-//                 <MenuItem value="attended">Attended</MenuItem>
-//                 <MenuItem value="expert_talk">Expert Talk</MenuItem>
-//               </TextField>
-//             </Grid>
-
-//             <Grid item xs={12} md={6}>
-//               <TextField
-//                 label="Activity Name"
-//                 fullWidth
-//                 value={form.activityName}
-//                 onChange={(e) => setForm({ ...form, activityName: e.target.value })}
-//                 required
-//               />
-//             </Grid>
-
-//             <Grid item xs={12}>
-//               <TextField
-//                 label="Coordinator"
-//                 fullWidth
-//                 value={form.coordinator}
-//                 onChange={(e) => setForm({ ...form, coordinator: e.target.value })}
-//               />
-//             </Grid>
-
-//             <Grid item xs={12} md={4}>
-//               <TextField label="Date" type="date" InputLabelProps={{ shrink: true }} fullWidth value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
-//             </Grid>
-
-//             <Grid item xs={12} md={4}>
-//               <TextField label="Duration" fullWidth value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} />
-//             </Grid>
-
-//             <Grid item xs={12} md={4}>
-//               <TextField label="PO & POs" fullWidth value={form.poPos} onChange={(e) => setForm({ ...form, poPos: e.target.value })} />
-//             </Grid>
-
-//             <Grid item xs={12}>
-//               <Typography variant="subtitle1" sx={{ mb: 1 }}>Invitation</Typography>
-//               <input name="invitation" type="file" onChange={(e) => previewFile(e, "invitation")} />
-//               {previews.invitation ? <img src={previews.invitation} style={{ width: 200 }} /> : existing.invitation ? <img src={existing.invitation} style={{ width: 200 }} /> : null}
-//             </Grid>
-
-//             <Grid item xs={12}>
-//               <Typography variant="subtitle1" sx={{ mb: 1 }}>Poster</Typography>
-//               <input name="poster" type="file" onChange={(e) => previewFile(e, "poster")} />
-//               {previews.poster ? <img src={previews.poster} style={{ width: 200 }} /> : existing.poster ? <img src={existing.poster} style={{ width: 200 }} /> : null}
-//             </Grid>
-
-//             <Grid item xs={12}>
-//               <Typography variant="subtitle1">Resource Person</Typography>
-//               <Grid container spacing={2} sx={{ mt: 1 }}>
-//                 <Grid item xs={12} md={6}><TextField label="Name" fullWidth value={form.resourceName} onChange={(e) => setForm({ ...form, resourceName: e.target.value })} /></Grid>
-//                 <Grid item xs={12} md={3}><TextField label="Designation" fullWidth value={form.resourceDesignation} onChange={(e) => setForm({ ...form, resourceDesignation: e.target.value })} /></Grid>
-//                 <Grid item xs={12} md={3}><TextField label="Institution" fullWidth value={form.resourceInstitution} onChange={(e) => setForm({ ...form, resourceInstitution: e.target.value })} /></Grid>
-//               </Grid>
-
-//               <Box sx={{ mt: 1 }}>
-//                 <input name="resourcePhoto" type="file" onChange={(e) => previewFile(e, "resourcePhoto")} />
-//                 {previews.resourcePhoto ? <img src={previews.resourcePhoto} style={{ width: 120 }} /> : existing.resourcePhoto ? <img src={existing.resourcePhoto} style={{ width: 120 }} /> : null}
-//               </Box>
-//             </Grid>
-
-//             <Grid item xs={12}>
-//               <Typography variant="subtitle1">Session Report</Typography>
-
-//               <Grid container spacing={2} sx={{ mt: 1 }}>
-//                 <Grid item xs={12}>
-//                   <TextField label="Session Name" fullWidth value={form.sessionName} onChange={(e) => setForm({ ...form, sessionName: e.target.value })} />
-//                 </Grid>
-
-//                 <Grid item xs={12}>
-//                   <TextField label="Co-ordinator(s) (comma separated)" fullWidth value={form.coordinatorsText} onChange={(e) => setForm({ ...form, coordinatorsText: e.target.value })} helperText="Enter multiple names separated by commas" />
-//                 </Grid>
-
-//                 <Grid item xs={12} md={6}>
-//                   <TextField label="Google Meet / Link" fullWidth value={form.googleMeetLink} onChange={(e) => setForm({ ...form, googleMeetLink: e.target.value })} />
-//                 </Grid>
-
-//                 <Grid item xs={12} md={3}>
-//                   <TextField label="Intended Participants" fullWidth value={form.intendedParticipants} onChange={(e) => setForm({ ...form, intendedParticipants: e.target.value })} />
-//                 </Grid>
-
-//                 <Grid item xs={12} md={3}>
-//                   <TextField label="Category of Event" fullWidth value={form.categoryOfEvent} onChange={(e) => setForm({ ...form, categoryOfEvent: e.target.value })} />
-//                 </Grid>
-
-//                 <Grid item xs={12}>
-//                   <TextField multiline rows={4} fullWidth value={form.sessionSummary} onChange={(e) => setForm({ ...form, sessionSummary: e.target.value })} sx={{ mt: 1 }} />
-//                 </Grid>
-
-//                 <Grid item xs={12} md={6}>
-//                   <TextField label="Students Present" type="number" fullWidth value={form.participantsCount} onChange={(e) => setForm({ ...form, participantsCount: e.target.value })} />
-//                 </Grid>
-//                 <Grid item xs={12} md={6}>
-//                   <TextField label="Faculty Present" type="number" fullWidth value={form.facultyCount} onChange={(e) => setForm({ ...form, facultyCount: e.target.value })} />
-//                 </Grid>
-//               </Grid>
-//             </Grid>
-
-//             <Grid item xs={12}>
-//               <Typography variant="subtitle1">Attendance File</Typography>
-//               <input name="attendanceFile" type="file" />
-//             </Grid>
-
-//             <Grid item xs={12}>
-//               <Typography variant="subtitle1">Event Photos</Typography>
-//               <input name="photos" type="file" multiple onChange={previewMultiple} />
-//               <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-//                 {previews.photos.length > 0 ? previews.photos.map((u, i) => <img key={i} src={u} style={{ width: 120 }} />) : existing.photos.map((u, i) => <img key={i} src={u} style={{ width: 120 }} />)}
-//               </Box>
-//             </Grid>
-
-//             <Grid item xs={12}>
-//               <TextField multiline rows={3} label="Feedback" fullWidth value={form.feedback} onChange={(e) => setForm({ ...form, feedback: e.target.value })} />
-//             </Grid>
-
-//             <Grid item xs={12} sx={{ display: "flex", gap: 1 }}>
-//               <Button variant="contained" type="submit" disabled={saving} onClick={handleUpdate}>{saving ? "Saving..." : "Update Report"}</Button>
-//               <Button variant="outlined" onClick={() => navigate(`/faculty/report/${id}`)}>Cancel</Button>
-//             </Grid>
-//           </Grid>
-//         </form>
-//       </Paper>
-//     </Box>
-//   );
-// }
-
-
-
-
 // client/src/pages/Faculty/EditReport.jsx
 import React, { useEffect, useState, useContext } from "react";
 import {
   Box,
+  Grid,
   Paper,
   Typography,
   TextField,
-  Button,
-  Grid,
+  MenuItem,
+  Button
 } from "@mui/material";
+
 import axiosClient from "../../utils/axiosClient";
 import { useParams, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
+import "./EditReport.css";
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5002";
+
 
 export default function EditReport() {
   const { id } = useParams();
@@ -606,6 +29,7 @@ export default function EditReport() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  /* ================= FORM ================= */
   const [form, setForm] = useState({
     reportType: "conducted",
     academicYear: "",
@@ -614,11 +38,11 @@ export default function EditReport() {
     date: "",
     duration: "",
     poPos: "",
+
     resourceName: "",
     resourceDesignation: "",
     resourceInstitution: "",
 
-    // session fields
     sessionName: "",
     coordinatorsText: "",
     googleMeetLink: "",
@@ -632,12 +56,14 @@ export default function EditReport() {
     feedback: "",
   });
 
+  /* ================= FILE PREVIEWS ================= */
   const [previews, setPreviews] = useState({
     invitation: null,
     poster: null,
     resourcePhoto: null,
     attendanceImages: [],
     photos: [],
+    feedbackImages: [],
   });
 
   const [existing, setExisting] = useState({
@@ -646,39 +72,46 @@ export default function EditReport() {
     resourcePhoto: null,
     attendanceImages: [],
     photos: [],
+    feedbackImages: [],
   });
 
-  // -----------------------------
-  // LOAD REPORT DATA
-  // -----------------------------
+
+//new update
+const [deletedImages, setDeletedImages] = useState({
+  attendanceImages: [],
+  photos: [],
+  feedbackImages: [],
+});
+
+
+const [previewImage, setPreviewImage] = useState(null);
+
+
+
+  /* ================= LOAD DATA ================= */
   useEffect(() => {
     const load = async () => {
       try {
-        setLoading(true);
         const res = await axiosClient.get(`/activity/${id}`);
-        const data = res.data;
-
-        const sr = data.sessionReport || {};
-
-        const coordsText = Array.isArray(sr.coordinators)
-          ? sr.coordinators.join(", ")
-          : sr.coordinators || "";
+        const d = res.data;
+        const sr = d.sessionReport || {};
+        const base = axiosClient.defaults.baseURL.replace("/api", "");
 
         setForm({
-          reportType: data.reportType || "conducted",
-          academicYear: data.academicYear || "",
-          activityName: data.activityName || "",
-          coordinator: data.coordinator || "",
-          date: data.date || "",
-          duration: data.duration || "",
-          poPos: data.poPos || "",
+          reportType: d.reportType,
+          academicYear: d.academicYear,
+          activityName: d.activityName,
+          coordinator: d.coordinator,
+          date: d.date,
+          duration: d.duration,
+          poPos: d.poPos,
 
-          resourceName: data.resourcePerson?.name || "",
-          resourceDesignation: data.resourcePerson?.designation || "",
-          resourceInstitution: data.resourcePerson?.institution || "",
+          resourceName: d.resourcePerson?.name || "",
+          resourceDesignation: d.resourcePerson?.designation || "",
+          resourceInstitution: d.resourcePerson?.institution || "",
 
           sessionName: sr.sessionName || "",
-          coordinatorsText: coordsText,
+          coordinatorsText: (sr.coordinators || []).join(", "),
           googleMeetLink: sr.googleMeetLink || "",
           intendedParticipants: sr.intendedParticipants || "",
           categoryOfEvent: sr.categoryOfEvent || "",
@@ -687,24 +120,46 @@ export default function EditReport() {
           participantsCount: sr.participantsCount || "",
           facultyCount: sr.facultyCount || "",
 
-          feedback: data.feedback || "",
+          feedback: d.feedback || "",
         });
 
-        const base = axiosClient.defaults.baseURL.replace("/api", "");
+       
+  const baseURL = axiosClient.defaults.baseURL.replace("/api", "");
 
-        setExisting({
-          invitation: data.invitation ? `${base}/${data.invitation}` : null,
-          poster: data.poster ? `${base}/${data.poster}` : null,
-          resourcePhoto: data.resourcePerson?.photo
-            ? `${base}/${data.resourcePerson.photo}`
-            : null,
-          attendanceImages: (data.attendanceImages || []).map(
-            (p) => `${base}/${p}`
-          ),
-          photos: (data.photos || []).map((p) => `${base}/${p}`),
-        });
-      } catch (err) {
-        console.error(err);
+setExisting({
+  invitation: d.invitation
+    ? `${API_BASE}/${d.invitation}`
+    : null,
+
+  poster: d.poster
+    ? `${API_BASE}/${d.poster}`
+    : null,
+
+  resourcePhoto: d.resourcePerson?.photo
+    ? `${API_BASE}/${d.resourcePerson.photo}`
+    : null,
+
+  attendanceImages: (d.attendanceImages || []).map(
+    img => `${API_BASE}/${img}`
+  ),
+
+  photos: (d.photos || []).map(
+    img => `${API_BASE}/${img}`
+  ),
+
+  feedbackImages: (d.feedbackImages || []).map(
+    img => `${API_BASE}/${img}`
+  ),
+});
+
+
+console.log("EDIT IMAGES CHECK:", {
+  attendance: d.attendanceImages,
+  resolved: (d.attendanceImages || []).map(img => `${API_BASE}/${img}`)
+});
+
+        
+      } catch {
         alert("Failed to load report");
       } finally {
         setLoading(false);
@@ -713,393 +168,508 @@ export default function EditReport() {
     load();
   }, [id]);
 
-  // -----------------------------
-  // FILE PREVIEWS
-  // -----------------------------
-  const previewFile = (e, key) => {
+const base = axiosClient.defaults.baseURL
+  .replace("/api", "")
+  .replace(/\/$/, "");
+
+
+
+  /* ================= HELPERS ================= */
+  const previewSingle = (e, key) => {
     const f = e.target.files[0];
-    if (!f) return;
-    setPreviews((p) => ({ ...p, [key]: URL.createObjectURL(f) }));
+    if (f) setPreviews(p => ({ ...p, [key]: URL.createObjectURL(f) }));
   };
 
-  const previewAttendanceImages = (e) => {
+  const previewMultiple = (e, key) => {
     const arr = Array.from(e.target.files || []);
-    setPreviews((p) => ({
+    setPreviews(p => ({
       ...p,
-      attendanceImages: arr.map((f) => URL.createObjectURL(f)),
+      [key]: arr.map(f => URL.createObjectURL(f)),
     }));
   };
 
-  const previewMultiplePhotos = (e) => {
-    const arr = Array.from(e.target.files);
-    setPreviews((p) => ({
-      ...p,
-      photos: arr.map((f) => URL.createObjectURL(f)),
-    }));
-  };
-
-  // -----------------------------
-  // UPDATE REPORT
-  // -----------------------------
+  /* ================= UPDATE ================= */
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
       setSaving(true);
-
       const fd = new FormData();
 
-      const coordinatorsArr = form.coordinatorsText
-        ? form.coordinatorsText.split(",").map((s) => s.trim()).filter(Boolean)
-        : [];
+    
+      fd.append(
+  "payload",
+  JSON.stringify({
+    ...form,
+    deletedImages,   // 👈 ADD THIS
+    updatedBy: user?.id,
+    resourcePerson: {
+      name: form.resourceName,
+      designation: form.resourceDesignation,
+      institution: form.resourceInstitution,
+    },
+    sessionReport: {
+      sessionName: form.sessionName,
+      coordinators: form.coordinatorsText.split(",").map(s => s.trim()),
+      googleMeetLink: form.googleMeetLink,
+      intendedParticipants: form.intendedParticipants,
+      categoryOfEvent: form.categoryOfEvent,
+      date: form.sessionDate,
+      summary: form.sessionSummary,
+      participantsCount: form.participantsCount,
+      facultyCount: form.facultyCount,
+    },
+  })
+);
 
-      const payload = {
-        ...form,
-        updatedBy: user?.id,
-        resourcePerson: {
-          name: form.resourceName,
-          designation: form.resourceDesignation,
-          institution: form.resourceInstitution,
-        },
-        sessionReport: {
-          sessionName: form.sessionName,
-          coordinators: coordinatorsArr,
-          googleMeetLink: form.googleMeetLink,
-          intendedParticipants: form.intendedParticipants,
-          categoryOfEvent: form.categoryOfEvent,
-          date: form.sessionDate,
-          summary: form.sessionSummary,
-          participantsCount: form.participantsCount,
-          facultyCount: form.facultyCount,
-        },
-      };
 
-      fd.append("payload", JSON.stringify(payload));
-
-      // single files
-      if (e.target.invitation?.files?.[0])
-        fd.append("invitation", e.target.invitation.files[0]);
-      if (e.target.poster?.files?.[0])
-        fd.append("poster", e.target.poster.files[0]);
-      if (e.target.resourcePhoto?.files?.[0])
-        fd.append("resourcePhoto", e.target.resourcePhoto.files[0]);
-
-      // attendance file (PDF/XLSX)
-      if (e.target.attendanceFile?.files?.[0])
-        fd.append("attendanceFile", e.target.attendanceFile.files[0]);
-
-      // attendance images (multiple)
-      const attImgs = e.target.attendanceImages?.files || [];
-      for (let i = 0; i < attImgs.length; i++) {
-        fd.append("attendanceImages", attImgs[i]);
-      }
-
-      // event photos
-      const photos = e.target.photos?.files || [];
-      for (let i = 0; i < photos.length; i++) fd.append("photos", photos[i]);
-
-      await axiosClient.put(`/activity/${id}`, fd, {
-        headers: { "Content-Type": "multipart/form-data" },
+      ["invitation", "poster", "resourcePhoto"].forEach(k => {
+        if (e.target[k]?.files?.[0]) fd.append(k, e.target[k].files[0]);
       });
 
+      ["attendanceImages", "photos", "feedbackImages"].forEach(k => {
+        Array.from(e.target[k]?.files || []).forEach(f => fd.append(k, f));
+      });
+
+      await axiosClient.put(`/activity/${id}`, fd);
       alert("Report updated");
       navigate(`/faculty/report/${id}`);
-    } catch (err) {
-      console.error(err);
-      alert(err?.response?.data?.message || "Update failed");
+    } catch {
+      alert("Update failed");
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading) return <Box sx={{ p: 4 }}>Loading...</Box>;
+  if (loading) return <p>Loading...</p>;
+  console.log("FORM DATA:", form);
 
-  // -----------------------------
-  // UI RENDER
-  // -----------------------------
+
+
+  //new update
+
+  const removeImage = (type, index) => {
+  setDeletedImages((prev) => ({
+    ...prev,
+    [type]: [...prev[type], index],
+  }));
+};
+
+  /* ================= UI ================= */
   return (
-    <Box sx={{ maxWidth: 1000, mx: "auto", p: 2 }}>
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h5" sx={{ mb: 2 }}>
+    <Box className="edit-wrapper">
+      <Paper className="edit-paper">
+        <Typography variant="h5" className="edit-title">
           Edit Activity Report
         </Typography>
 
         <form onSubmit={handleUpdate}>
-          <Grid container spacing={2}>
+ 
+          
+          {/* ACTIVITY DETAILS */}
+          {/* ================= ACTIVITY DETAILS ================= */}
+<div className="edit-section">
+  <h3>Activity Details</h3>
 
-            {/* ACTIVITY DETAILS */}
-            <Grid item xs={12} md={6}>
-              <TextField
-                select
-                label="Report Type"
-                value={form.reportType}
-                fullWidth
-                onChange={(e) => setForm({ ...form, reportType: e.target.value })}
-              >
-                <MenuItem value="conducted">Conducted</MenuItem>
-                <MenuItem value="attended">Attended</MenuItem>
-                <MenuItem value="expert_talk">Expert Talk</MenuItem>
-              </TextField>
-            </Grid>
+  <Grid container spacing={2}>
+    <Grid item xs={12} md={6}>
+      <TextField
+        select
+        label="Report Type"
+        fullWidth
+        value={form.reportType}
+        onChange={(e) =>
+          setForm({ ...form, reportType: e.target.value })
+        }
+      >
+        <MenuItem value="conducted">Conducted</MenuItem>
+        <MenuItem value="attended">Attended</MenuItem>
+        <MenuItem value="expert_talk">Expert Talk</MenuItem>
+      </TextField>
+    </Grid>
 
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Activity Name"
-                fullWidth
-                value={form.activityName}
-                onChange={(e) => setForm({ ...form, activityName: e.target.value })}
-                required
-              />
-            </Grid>
+    <Grid item xs={12} md={6}>
+      <TextField
+        label="Academic Year"
+        fullWidth
+        value={form.academicYear}
+        onChange={(e) =>
+          setForm({ ...form, academicYear: e.target.value })
+        }
+      />
+    </Grid>
 
-            <Grid item xs={12}>
-              <TextField
-                label="Coordinator"
-                fullWidth
-                value={form.coordinator}
-                onChange={(e) => setForm({ ...form, coordinator: e.target.value })}
-              />
-            </Grid>
+    <Grid item xs={12}>
+      <TextField
+        label="Activity Name"
+        fullWidth
+        value={form.activityName}
+        onChange={(e) =>
+          setForm({ ...form, activityName: e.target.value })
+        }
+      />
+    </Grid>
 
-            <Grid item xs={12} md={4}>
-              <TextField
-                label="Date"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                fullWidth
-                value={form.date}
-                onChange={(e) => setForm({ ...form, date: e.target.value })}
-              />
-            </Grid>
+    <Grid item xs={12}>
+      <TextField
+        label="Coordinator"
+        fullWidth
+        value={form.coordinator}
+        onChange={(e) =>
+          setForm({ ...form, coordinator: e.target.value })
+        }
+      />
+    </Grid>
 
-            <Grid item xs={12} md={4}>
-              <TextField
-                label="Duration"
-                fullWidth
-                value={form.duration}
-                onChange={(e) => setForm({ ...form, duration: e.target.value })}
-              />
-            </Grid>
+    <Grid item xs={12} md={4}>
+      <TextField
+        label="Date"
+        type="date"
+        InputLabelProps={{ shrink: true }}
+        fullWidth
+        value={form.date}
+        onChange={(e) =>
+          setForm({ ...form, date: e.target.value })
+        }
+      />
+    </Grid>
 
-            <Grid item xs={12} md={4}>
-              <TextField
-                label="PO & POs"
-                fullWidth
-                value={form.poPos}
-                onChange={(e) => setForm({ ...form, poPos: e.target.value })}
-              />
-            </Grid>
+    <Grid item xs={12} md={4}>
+      <TextField
+        label="Duration"
+        fullWidth
+        value={form.duration}
+        onChange={(e) =>
+          setForm({ ...form, duration: e.target.value })
+        }
+      />
+    </Grid>
 
-            {/* INVITATION */}
-            <Grid item xs={12}>
-              <Typography variant="subtitle1">Invitation</Typography>
-              <input name="invitation" type="file" onChange={(e) => previewFile(e, "invitation")} />
-              {previews.invitation ? (
-                <img src={previews.invitation} style={{ width: 200 }} />
-              ) : existing.invitation ? (
-                <img src={existing.invitation} style={{ width: 200 }} />
-              ) : null}
-            </Grid>
+    <Grid item xs={12} md={4}>
+      <TextField
+        label="PO & POs"
+        fullWidth
+        value={form.poPos}
+        onChange={(e) =>
+          setForm({ ...form, poPos: e.target.value })
+        }
+      />
+    </Grid>
+  </Grid>
+</div>
 
-            {/* POSTER */}
-            <Grid item xs={12}>
-              <Typography variant="subtitle1">Poster</Typography>
-              <input name="poster" type="file" onChange={(e) => previewFile(e, "poster")} />
-              {previews.poster ? (
-                <img src={previews.poster} style={{ width: 200 }} />
-              ) : existing.poster ? (
-                <img src={existing.poster} style={{ width: 200 }} />
-              ) : null}
-            </Grid>
 
-            {/* RESOURCE PERSON */}
-            <Grid item xs={12}>
-              <Typography variant="subtitle1">Resource Person</Typography>
-              <Grid container spacing={2} sx={{ mt: 1 }}>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    label="Name"
-                    fullWidth
-                    value={form.resourceName}
-                    onChange={(e) => setForm({ ...form, resourceName: e.target.value })}
-                  />
-                </Grid>
+          {/* INVITATION */}
+          <ImageSection
+            title="Invitation"
+            name="invitation"
+            preview={previews.invitation}
+            existing={existing.invitation}
+            onChange={previewSingle}
+          />
 
-                <Grid item xs={12} md={3}>
-                  <TextField
-                    label="Designation"
-                    fullWidth
-                    value={form.resourceDesignation}
-                    onChange={(e) => setForm({ ...form, resourceDesignation: e.target.value })}
-                  />
-                </Grid>
+          {/* POSTER */}
+          <ImageSection
+            title="Poster"
+            name="poster"
+            preview={previews.poster}
+            existing={existing.poster}
+            onChange={previewSingle}
+          />
 
-                <Grid item xs={12} md={3}>
-                  <TextField
-                    label="Institution"
-                    fullWidth
-                    value={form.resourceInstitution}
-                    onChange={(e) => setForm({ ...form, resourceInstitution: e.target.value })}
-                  />
-                </Grid>
-              </Grid>
+          {/* RESOURCE PERSON */}
+         {/* ================= RESOURCE PERSON ================= */}
+<div className="edit-section">
+  <h3>Resource Person Details</h3>
 
-              <Box sx={{ mt: 1 }}>
-                <input name="resourcePhoto" type="file" onChange={(e) => previewFile(e, "resourcePhoto")} />
-                {previews.resourcePhoto ? (
-                  <img src={previews.resourcePhoto} style={{ width: 120 }} />
-                ) : existing.resourcePhoto ? (
-                  <img src={existing.resourcePhoto} style={{ width: 120 }} />
-                ) : null}
-              </Box>
-            </Grid>
+  <Grid container spacing={2}>
+    <Grid item xs={12} md={6}>
+      <TextField
+        label="Resource Name"
+        fullWidth
+        value={form.resourceName}
+        onChange={(e) =>
+          setForm({ ...form, resourceName: e.target.value })
+        }
+      />
+    </Grid>
 
-            {/* SESSION REPORT */}
-            <Grid item xs={12}>
-              <Typography variant="subtitle1">Session Report</Typography>
+    <Grid item xs={12} md={3}>
+      <TextField
+        label="Designation"
+        fullWidth
+        value={form.resourceDesignation}
+        onChange={(e) =>
+          setForm({ ...form, resourceDesignation: e.target.value })
+        }
+      />
+    </Grid>
 
-              <Grid container spacing={2} sx={{ mt: 1 }}>
-                <Grid item xs={12}>
-                  <TextField
-                    label="Session Name"
-                    fullWidth
-                    value={form.sessionName}
-                    onChange={(e) => setForm({ ...form, sessionName: e.target.value })}
-                  />
-                </Grid>
+    <Grid item xs={12} md={3}>
+      <TextField
+        label="Institution"
+        fullWidth
+        value={form.resourceInstitution}
+        onChange={(e) =>
+          setForm({ ...form, resourceInstitution: e.target.value })
+        }
+      />
+    </Grid>
 
-                <Grid item xs={12}>
-                  <TextField
-                    label="Co-ordinator(s)"
-                    fullWidth
-                    helperText="Separate multiple names with commas"
-                    value={form.coordinatorsText}
-                    onChange={(e) => setForm({ ...form, coordinatorsText: e.target.value })}
-                  />
-                </Grid>
+    <Grid item xs={12}>
+      <input
+        type="file"
+        name="resourcePhoto"
+        onChange={(e) => previewFile(e, "resourcePhoto")}
+      />
 
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    label="Google Meet Link"
-                    fullWidth
-                    value={form.googleMeetLink}
-                    onChange={(e) => setForm({ ...form, googleMeetLink: e.target.value })}
-                  />
-                </Grid>
+      {previews.resourcePhoto ? (
+        <img src={previews.resourcePhoto} width={120} />
+      ) : existing.resourcePhoto ? (
+        <img src={existing.resourcePhoto} width={120} />
+      ) : null}
+    </Grid>
+  </Grid>
+</div>
 
-                <Grid item xs={12} md={3}>
-                  <TextField
-                    label="Intended Participants"
-                    fullWidth
-                    value={form.intendedParticipants}
-                    onChange={(e) => setForm({ ...form, intendedParticipants: e.target.value })}
-                  />
-                </Grid>
 
-                <Grid item xs={12} md={3}>
-                  <TextField
-                    label="Category of Event"
-                    fullWidth
-                    value={form.categoryOfEvent}
-                    onChange={(e) => setForm({ ...form, categoryOfEvent: e.target.value })}
-                  />
-                </Grid>
+          
+         {/* SESSION REPORT */}
+<div className="edit-section">
+  <h3>Session Report</h3>
 
-                <Grid item xs={12}>
-                  <TextField
-                    multiline
-                    rows={4}
-                    label="Summary"
-                    fullWidth
-                    value={form.sessionSummary}
-                    onChange={(e) => setForm({ ...form, sessionSummary: e.target.value })}
-                  />
-                </Grid>
+  <Grid container spacing={2}>
+    <Grid item xs={12}>
+      <TextField
+        label="Session Name"
+        fullWidth
+        value={form.sessionName}
+        onChange={(e) =>
+          setForm({ ...form, sessionName: e.target.value })
+        }
+      />
+    </Grid>
 
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    label="Students Present"
-                    type="number"
-                    fullWidth
-                    value={form.participantsCount}
-                    onChange={(e) => setForm({ ...form, participantsCount: e.target.value })}
-                  />
-                </Grid>
+    <Grid item xs={12}>
+      <TextField
+        label="Co-ordinator(s)"
+        helperText="Comma separated"
+        fullWidth
+        value={form.coordinatorsText}
+        onChange={(e) =>
+          setForm({ ...form, coordinatorsText: e.target.value })
+        }
+      />
+    </Grid>
 
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    label="Faculty Present"
-                    type="number"
-                    fullWidth
-                    value={form.facultyCount}
-                    onChange={(e) => setForm({ ...form, facultyCount: e.target.value })}
-                  />
-                </Grid>
-              </Grid>
-            </Grid>
+    <Grid item xs={12} md={6}>
+      <TextField
+        label="Google Meet Link"
+        fullWidth
+        value={form.googleMeetLink}
+        onChange={(e) =>
+          setForm({ ...form, googleMeetLink: e.target.value })
+        }
+      />
+    </Grid>
 
-            {/* ATTENDANCE FILE */}
-            <Grid item xs={12}>
-              <Typography variant="subtitle1">Attendance File (PDF/XLSX)</Typography>
-              <input name="attendanceFile" type="file" />
-            </Grid>
+    <Grid item xs={12} md={3}>
+      <TextField
+        label="Intended Participants"
+        fullWidth
+        value={form.intendedParticipants}
+        onChange={(e) =>
+          setForm({ ...form, intendedParticipants: e.target.value })
+        }
+      />
+    </Grid>
 
-            {/* ATTENDANCE IMAGES */}
-            <Grid item xs={12}>
-              <Typography variant="subtitle1">Attendance Images (Multiple)</Typography>
-              <input name="attendanceImages" type="file" accept="image/*" multiple onChange={previewAttendanceImages} />
+    <Grid item xs={12} md={3}>
+      <TextField
+        label="Category of Event"
+        fullWidth
+        value={form.categoryOfEvent}
+        onChange={(e) =>
+          setForm({ ...form, categoryOfEvent: e.target.value })
+        }
+      />
+    </Grid>
 
-              <Box sx={{ display: "flex", gap: 1, mt: 2, flexWrap: "wrap" }}>
-                {previews.attendanceImages.length > 0
-                  ? previews.attendanceImages.map((src, i) => (
-                      <img key={i} src={src} style={{ width: 150, borderRadius: 6 }} />
-                    ))
-                  : existing.attendanceImages.map((src, i) => (
-                      <img key={i} src={src} style={{ width: 150, borderRadius: 6 }} />
-                    ))}
-              </Box>
-            </Grid>
+    <Grid item xs={12}>
+      <TextField
+        label="Summary"
+        multiline
+        rows={4}
+        fullWidth
+        value={form.sessionSummary}
+        onChange={(e) =>
+          setForm({ ...form, sessionSummary: e.target.value })
+        }
+      />
+    </Grid>
 
-            {/* EVENT PHOTOS */}
-            <Grid item xs={12}>
-              <Typography variant="subtitle1">Event Photos</Typography>
-              <input name="photos" type="file" multiple onChange={previewMultiplePhotos} />
+    <Grid item xs={12} md={6}>
+      <TextField
+        label="Students Present"
+        type="number"
+        fullWidth
+        value={form.participantsCount}
+        onChange={(e) =>
+          setForm({ ...form, participantsCount: e.target.value })
+        }
+      />
+    </Grid>
 
-              <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-                {previews.photos.length > 0
-                  ? previews.photos.map((u, i) => (
-                      <img key={i} src={u} style={{ width: 120 }} />
-                    ))
-                  : existing.photos.map((u, i) => (
-                      <img key={i} src={u} style={{ width: 120 }} />
-                    ))}
-              </Box>
-            </Grid>
+    <Grid item xs={12} md={6}>
+      <TextField
+        label="Faculty Present"
+        type="number"
+        fullWidth
+        value={form.facultyCount}
+        onChange={(e) =>
+          setForm({ ...form, facultyCount: e.target.value })
+        }
+      />
+    </Grid>
+  </Grid>
+</div>
 
-            {/* FEEDBACK */}
-            <Grid item xs={12}>
-              <TextField
-                multiline
-                rows={3}
-                label="Feedback"
-                fullWidth
-                value={form.feedback}
-                onChange={(e) => setForm({ ...form, feedback: e.target.value })}
-              />
-            </Grid>
 
-            {/* BUTTONS */}
-            <Grid item xs={12} sx={{ display: "flex", gap: 2 }}>
-              <Button variant="contained" type="submit" disabled={saving}>
-                {saving ? "Saving..." : "Update Report"}
-              </Button>
-              <Button variant="outlined" onClick={() => navigate(`/faculty/report/${id}`)}>
-                Cancel
-              </Button>
-            </Grid>
+<MultiImageSection
+  title="Attendance Images"
+  name="attendanceImages"
+  preview={previews.attendanceImages}
+  existing={existing.attendanceImages}
+  deleted={deletedImages.attendanceImages}
+  onChange={previewMultiple}
+  onDelete={removeImage}
+  setPreviewImage={setPreviewImage}
+/>
 
-          </Grid>
+<MultiImageSection
+  title="Event Photos"
+  name="photos"
+  preview={previews.photos}
+  existing={existing.photos}
+  deleted={deletedImages.photos}
+  onChange={previewMultiple}
+  onDelete={removeImage}
+  setPreviewImage={setPreviewImage}
+/>
+
+<MultiImageSection
+  title="Feedback Images"
+  name="feedbackImages"
+  preview={previews.feedbackImages}
+  existing={existing.feedbackImages}
+  deleted={deletedImages.feedbackImages}
+  onChange={previewMultiple}
+  onDelete={removeImage}
+  setPreviewImage={setPreviewImage}
+/>
+
+          <div className="edit-actions">
+            <Button variant="contained" type="submit" disabled={saving}>
+              Update Report
+            </Button>
+            <Button variant="outlined" onClick={() => navigate(-1)}>
+              Cancel
+            </Button>
+          </div>
         </form>
       </Paper>
+
+
+      {/* //new update  */}
+
+      {previewImage && (
+  <div
+    className="image-preview-overlay"
+    onClick={() => setPreviewImage(null)}
+  >
+    <span className="close-preview">×</span>
+
+    <img
+      src={previewImage}
+      alt="Preview"
+      className="image-preview-full"
+      onClick={(e) => e.stopPropagation()}
+    />
+  </div>
+)}
+
     </Box>
   );
 }
+
+/* ================= REUSABLE UI ================= */
+
+const Section = ({ title, children }) => (
+  <div className="edit-section">
+    <h3>{title}</h3>
+    {children}
+  </div>
+);
+
+const ImageSection = ({ title, name, preview, existing, onChange }) => (
+  <Section title={title}>
+    <input type="file" name={name} onChange={e => onChange(e, name)} />
+    <div className="image-grid">
+      {(preview || existing) && <img src={preview || existing} alt={title} />}
+    </div>
+  </Section>
+);
+
+
+
+const MultiImageSection = ({
+  title,
+  name,
+  preview = [],
+  existing = [],
+  onChange,
+  deleted = [],
+  onDelete,
+  setPreviewImage, // ✅ only setter is used
+}) => {
+  const imagesToShow = preview.length > 0 ? preview : existing;
+
+  return (
+    <div className="edit-section">
+      <h3>{title}</h3>
+
+      <input
+        type="file"
+        name={name}
+        multiple
+        accept="image/*"
+        onChange={(e) => onChange(e, name)}
+      />
+
+      <div className="image-grid">
+        {imagesToShow.map((src, i) => {
+          if (deleted.includes(i)) return null;
+
+          return (
+            <div key={i} className="image-item">
+              <img
+                src={src}
+                alt={title}
+                className="clickable-image"
+                onClick={() => setPreviewImage(src)} // 🔍 only setter
+              />
+
+              <button
+                type="button"
+                className="delete-btn"
+                onClick={() => onDelete(name, i)}
+              >
+                ✕
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
