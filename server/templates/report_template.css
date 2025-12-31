@@ -236,18 +236,25 @@ a {
   margin-bottom: 8mm;
 }
 
-.invitation-image-wrapper img {
+{% comment %} .invitation-image-wrapper img {
   /* exact physical dimensions requested */
   width: 15.12cm;
   height: 19.46cm;
+   object-fit: contain; 
+  
+} {% endcomment %}
 
-  /* object-fit controls how the image is fitted into the box:
-     - use 'contain' to preserve full image (letterboxed if different aspect)
-     - use 'cover' to fill the box (will crop if aspect differs)
-     Choose one below (uncomment desired line). */
-  /* object-fit: contain; */
-  object-fit: cover;
+
+.invitation-image-wrapper img {
+  max-width: 15.12cm;
+  max-height: 19.46cm;
+
+  width: auto;
+  height: auto;
+
+  object-fit: contain;
 }
+
 
 /* ====================== POSTER PAGE STYLING ====================== */
 
@@ -270,16 +277,26 @@ a {
   margin-bottom: 8mm;
 }
 
-.poster-image-wrapper img {
+{% comment %} .poster-image-wrapper img {
   /* same physical size used for invitation */
   width: 16.12cm;
   height: 17.46cm;
-
-  /* preserve full image inside box (no cropping). Change to cover if you prefer crop */
-  object-fit: contain;
   display: block;
+  object-fit: contain;  
   object-fit: cover;
+} {% endcomment %}
+
+
+.poster-image-wrapper img {
+  max-width: 16.12cm;
+  max-height: 17.46cm;
+
+  width: auto;
+  height: auto;
+
+  object-fit: contain;
 }
+
 
 /* ================= RESOURCE PERSON STYLES ================= */
 .resource-title {
@@ -467,7 +484,7 @@ a {
   padding-bottom: 5px;
 }
 
-/* Same size as Invitation */
+{% comment %} /* Same size as Invitation */
 .attendance-box {
   width: auto;
   height: auto;
@@ -480,14 +497,40 @@ a {
   background: #fff;
 }
 
-/* Attendance image */
+
 .attendance-box img {
+  max-width: 15.12cm;
+  max-height: 17.46cm;
+  
+  width: auto;
+  height: auto;
+  
+  object-fit: contain;
+} {% endcomment %}
+
+
+.attendance-box {
   width: 15.12cm;
   height: 17.46cm;
-  object-fit: contain;
-  display: block;
-  object-fit: cover;
+
+  border: 1px solid #000;
+  background: #fff;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  overflow: hidden;
 }
+
+.attendance-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+
 
 /* Page break after each attendance image */
 .attendance-break {
@@ -505,7 +548,7 @@ a {
   margin-top: 5px;
 }
 
-/* Outer border box */
+ {% comment %} /* Outer border box */
 .photo-box {
   width: auto;
   height: auto;
@@ -521,17 +564,43 @@ a {
   /* INNER MARGIN BETWEEN IMAGE AND BORDER */
 
   background: #fff;
-}
+} 
 
-/* Image itself */
+ /* Image itself */
 .photo-box img {
   width: 15.23cm;
   height: 8.58cm;
 
   object-fit: contain;
   display: block;
-  object-fit: cover;
+  
+}  {% endcomment %}
+
+
+.photo-box {
+  width: 15.23cm;
+  height: 8.58cm;
+
+  border: 1px solid #000;
+  background: #fff;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  overflow: hidden; /* IMPORTANT */
 }
+
+.photo-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* FILLS BOX */
+  display: block;
+}
+
+
+
+
 .photo-page {
   page-break-after: always;
 }
@@ -547,7 +616,7 @@ a {
   gap: 25px;
 }
 
-/* Outer border */
+{% comment %} /* Outer border */
 .feedback-box {
   border: 1px solid #000;
   background: #fff;
@@ -557,14 +626,40 @@ a {
   align-items: center;
 }
 
-/* Image size – SAME AS PHOTOS */
+ /* Image size – SAME AS PHOTOS */
 .feedback-box img {
   width: 15.23cm;
   height: 8.58cm;
-
+  display:block;
   object-fit: cover;
+  object-fit: contain;
+}  {% endcomment %}
+
+
+
+.feedback-box {
+  width: 15.23cm;
+  height: 8.58cm;
+
+  border: 1px solid #000;
+  background: #fff;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  overflow: hidden; /* IMPORTANT */
+}
+
+.feedback-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* FILLS BOX */
   display: block;
 }
+
+
+
 
 /* Ensure clean page separation */
 .feedback-page {

@@ -1,50 +1,75 @@
 
+
 //client/src/pages/faculty/PreviewReport.jsx
 
 
-// import React, { useEffect, useState } from "react";
-// import { Box, Button, Stack } from "@mui/material";
-// import { useParams, useNavigate } from "react-router-dom";
-// import axiosClient from "../../utils/axiosClient";
 
-// export default function PreviewReport() {
+// import { useParams, useNavigate } from "react-router-dom";
+// import { Box, Button } from "@mui/material";
+
+// export default function ReportPreview() {
 //   const { id } = useParams();
 //   const navigate = useNavigate();
-//   const [html, setHtml] = useState("");
 
-//   useEffect(() => {
-//     axiosClient
-//       .get(`/activity/${id}/preview`, { responseType: "text" })
-//       .then((res) => setHtml(res.data));
-//   }, [id]);
+//   const previewUrl = `http://localhost:5002/api/activity/${id}/preview`;
 
 //   return (
 //     <Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
-      
-//       {/* TOP ACTION BAR */}
-//       <Stack direction="row" spacing={2} sx={{ p: 2, borderBottom: "1px solid #ccc" }}>
-//         <Button variant="contained" onClick={() => window.open(`/api/activity/${id}/pdf`)}>
+//       {/* Toolbar */}
+//       <Box
+//         sx={{
+//           p: 1,
+//           display: "flex",
+//           gap: 1,
+//           borderBottom: "1px solid #ddd",
+//           background: "#fafafa"
+//         }}
+//       >
+//         <Button
+//           variant="contained"
+//           onClick={() =>
+//             window.open(
+//               `http://localhost:5002/api/activity/${id}/pdf`,
+//               "_blank"
+//             )
+//           }
+//         >
 //           Download PDF
 //         </Button>
 
-//         <Button variant="contained" onClick={() => window.open(`/api/activity/${id}/docx`)}>
+//         <Button
+//           variant="contained"
+//           onClick={() =>
+//             window.open(
+//               `http://localhost:5002/api/activity/${id}/docx`,
+//               "_blank"
+//             )
+//           }
+//         >
 //           Download DOCX
 //         </Button>
 
-//         <Button variant="outlined" onClick={() => navigate(`/faculty/edit/${id}`)}>
+//         <Button
+//           variant="outlined"
+//           onClick={() => navigate(`/faculty/report/${id}/edit`)}
+//         >
 //           Edit Report
 //         </Button>
 
-//         <Button variant="text" onClick={() => navigate(-1)}>
+//         <Button variant="outlined" onClick={() => navigate(-1)}>
 //           Back
 //         </Button>
-//       </Stack>
+//       </Box>
 
-//       {/* PREVIEW FRAME */}
+//       {/* Preview iframe */}
 //       <iframe
-//         title="Preview"
-//         style={{ flex: 1, border: "none" }}
-//         srcDoc={html}
+//         src={previewUrl}
+//         title="Report Preview"
+//         style={{
+//           flex: 1,
+//           border: "none",
+//           width: "100%"
+//         }}
 //       />
 //     </Box>
 //   );
@@ -53,48 +78,59 @@
 
 
 
+// client/src/pages/faculty/PreviewReport.jsx
+
 import { useParams, useNavigate } from "react-router-dom";
 import { Box, Button } from "@mui/material";
+import axiosClient from "../../utils/axiosClient";
+import ViewMyReport from "./ViewMyReport";
 
-export default function ReportPreview() {
+export default function PreviewReport() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const previewUrl = `http://localhost:5002/api/activity/${id}/preview`;
+  const downloadFile = async (type) => {
+    try {
+      const res = await axiosClient.get(
+        `/activity/${id}/${type}`,
+        { responseType: "blob" }
+      );
+
+      const blob = new Blob([res.data]);
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `activity-report.${type}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      alert("Download failed");
+    }
+  };
 
   return (
     <Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+      
       {/* Toolbar */}
       <Box
         sx={{
-          p: 1,
+          p: 1.5,
           display: "flex",
           gap: 1,
           borderBottom: "1px solid #ddd",
-          background: "#fafafa"
+          background: "#fafafa",
         }}
       >
-        <Button
-          variant="contained"
-          onClick={() =>
-            window.open(
-              `http://localhost:5002/api/activity/${id}/pdf`,
-              "_blank"
-            )
-          }
-        >
+        <Button variant="contained" onClick={() => downloadFile("pdf")}>
           Download PDF
         </Button>
 
-        <Button
-          variant="contained"
-          onClick={() =>
-            window.open(
-              `http://localhost:5002/api/activity/${id}/docx`,
-              "_blank"
-            )
-          }
-        >
+        <Button variant="contained" onClick={() => downloadFile("docx")}>
           Download DOCX
         </Button>
 
@@ -110,16 +146,10 @@ export default function ReportPreview() {
         </Button>
       </Box>
 
-      {/* Preview iframe */}
-      <iframe
-        src={previewUrl}
-        title="Report Preview"
-        style={{
-          flex: 1,
-          border: "none",
-          width: "100%"
-        }}
-      />
+      {/* React Preview (NO iframe) */}
+      <Box sx={{ flex: 1, overflow: "auto" }}>
+        <ViewMyReport />
+      </Box>
     </Box>
   );
 }
