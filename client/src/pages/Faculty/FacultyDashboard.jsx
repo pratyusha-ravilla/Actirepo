@@ -55,7 +55,21 @@ import StatCard from "../../components/StatCard.jsx";
 import EventItem from "../../components/EventItem.jsx";
 import SummaryCard from "../../components/SummaryCard.jsx";
 
+
+
+//event registration
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import HowToRegIcon from "@mui/icons-material/HowToReg";
+import EventAvailableIcon from "@mui/icons-material/EventAvailable";
+
+
+
+
 const drawerWidth = 260;
+
+
+
 
 
 const typeOptions = [
@@ -71,7 +85,6 @@ const statusOptions = [
   { value: "approved", label: "Approved" },
   { value: "rejected", label: "Rejected" }
 ];
-
 
 
 export default function FacultyDashboard() {
@@ -91,6 +104,10 @@ export default function FacultyDashboard() {
   const [sortBy, setSortBy] = useState("date");
   const [sortDir, setSortDir] = useState("desc");
 
+  //event registration
+  const [eventsOpen, setEventsOpen] = useState(true);
+
+
   useEffect(() => {
     const load = async () => {
       try {
@@ -102,7 +119,11 @@ export default function FacultyDashboard() {
       setLoading(false);
     };
     load();
+
+ 
   }, []);
+
+
 
   const stats = useMemo(() => {
     return {
@@ -173,6 +194,130 @@ export default function FacultyDashboard() {
     </Box>
 
     <Divider sx={{ borderColor: "rgba(255,255,255,0.2)" }} />
+
+
+{/* //event  */}
+
+{/* <ListItem
+  component={Link}
+  to="/faculty/events"
+  sx={{
+    color: "#f5f3ff",
+    "&:hover": {
+      background: "rgba(255,255,255,0.15)"
+    }
+  }}
+>
+  <ListItemIcon sx={{ color: "inherit" }}>
+    <EventIcon />
+  </ListItemIcon>
+  <ListItemText
+    primary="Register for Event"
+    primaryTypographyProps={{ fontWeight: 600 }}
+  />
+</ListItem> */}
+
+{/* EVENTS SECTION */}
+<Divider sx={{ borderColor: "rgba(255,255,255,0.15)" }} />
+
+<List>
+  {/* EVENTS HEADER */}
+  <ListItem
+    button
+    onClick={() => setEventsOpen(!eventsOpen)}
+    sx={{
+      color: "#e9d5ff",
+      fontWeight: 700,
+      "&:hover": { background: "rgba(255,255,255,0.12)" }
+    }}
+  >
+    <ListItemIcon sx={{ color: "inherit" }}>
+      <EventIcon />
+    </ListItemIcon>
+
+    <ListItemText
+      primary="Events"
+      primaryTypographyProps={{ fontWeight: 700 }}
+    />
+
+    <ExpandMoreIcon
+      sx={{
+        transform: eventsOpen ? "rotate(180deg)" : "rotate(0deg)",
+        transition: "0.3s"
+      }}
+    />
+  </ListItem>
+
+  {/* EVENT SUB MENU */}
+  {eventsOpen && (
+    <Box sx={{ pl: 4 }}>
+      {/* Register for Event */}
+      <ListItem
+        component={Link}
+        to="/faculty/events/register"
+        sx={{
+          color: "#f5f3ff",
+          borderLeft: "3px solid transparent",
+          transition: "all 0.3s",
+          "&:hover": {
+            background: "rgba(255,255,255,0.12)",
+            borderLeft: "3px solid #fff"
+          }
+        }}
+      >
+        <ListItemIcon sx={{ color: "inherit" }}>
+          <HowToRegIcon />
+        </ListItemIcon>
+        <ListItemText primary="Register for Event" />
+      </ListItem>
+
+      {/* Create Event */}
+      <ListItem
+        component={Link}
+        to="/faculty/events/create"
+        sx={{
+          color: "#f5f3ff",
+          borderLeft: "3px solid transparent",
+          transition: "all 0.3s",
+          "&:hover": {
+            background: "rgba(255,255,255,0.12)",
+            borderLeft: "3px solid #fff"
+          }
+        }}
+      >
+        <ListItemIcon sx={{ color: "inherit" }}>
+          <AddCircleOutlineIcon />
+        </ListItemIcon>
+        <ListItemText primary="Create Event" />
+      </ListItem>
+
+      {/* My Registered Events */}
+      <ListItem
+        component={Link}
+        to="/faculty/events/my"
+        sx={{
+          color: "#f5f3ff",
+          borderLeft: "3px solid transparent",
+          transition: "all 0.3s",
+          "&:hover": {
+            background: "rgba(255,255,255,0.12)",
+            borderLeft: "3px solid #fff"
+          }
+        }}
+      >
+        <ListItemIcon sx={{ color: "inherit" }}>
+          <EventAvailableIcon />
+        </ListItemIcon>
+        <ListItemText primary="My Registered Events" />
+      </ListItem>
+    </Box>
+  )}
+</List>
+
+
+
+
+
 
  
 {/* MAIN MENU */}
@@ -250,6 +395,8 @@ export default function FacultyDashboard() {
 
 
 
+
+
     {/* FOOTER LOGOUT */}
     <Box sx={{ px: 3, py: 3, mt: "auto" }}>
       <Button
@@ -287,6 +434,8 @@ export default function FacultyDashboard() {
         </Toolbar>
       </AppBar>
 
+
+
       {/* ░░ SIDE DRAWER ░░ */}
      <Drawer
   variant="permanent"
@@ -304,6 +453,8 @@ export default function FacultyDashboard() {
         {drawerContent}
       </Drawer>
 
+    
+
       {/* ░░ MAIN CONTENT ░░ */}
       <Box
         component="main"
@@ -317,7 +468,7 @@ export default function FacultyDashboard() {
       >
         <Grid container spacing={4}>
 
-         
+       
 
 
 {/* ===== DASHBOARD HEADER ===== */}
@@ -351,110 +502,8 @@ export default function FacultyDashboard() {
 
 
 {/* ===== QUICK ACTIONS ===== */}
-{/* <Grid size={12}>
-  <Grid container spacing={3}>
-    {[
-      {
-        title: "Create New Report",
-        desc: "Start a new FDP / Expert Talk report",
-        action: () => navigate("/faculty/create"),
-        color: "#4c1d95"
-      },
-      {
-        title: "My Reports",
-        desc: "View all reports you created",
-        action: () => navigate("/faculty/mine"),
-        color: "#7c3aed"
-      },
-      {
-        title: "Pending Approvals",
-        desc: `${stats.pending} reports awaiting approval`,
-        action: () => {},
-        color: "#b45309"
-      }
-    ].map((item) => (
-      <Grid key={item.title} size={{ xs: 12, md: 4 }}>
-        <Paper
-          onClick={item.action}
-          sx={{
-            p: 3,
-            borderRadius: 3,
-            cursor: "pointer",
-            borderLeft: `6px solid ${item.color}`,
-            transition: "all 0.25s ease",
-            "&:hover": {
-              transform: "translateY(-4px)",
-              boxShadow: 6
-            }
-          }}
-        >
-          <Typography sx={{ fontWeight: 800, fontSize: 18 }}>
-            {item.title}
-          </Typography>
-          <Typography sx={{ mt: 1, color: "gray" }}>
-            {item.desc}
-          </Typography>
-        </Paper>
-      </Grid>
-    ))}
-  </Grid>
-</Grid> */}
-
-
  {/* ---------------- Row 1: Stat Cards ---------------- */}
-          {/* <Grid size={12}>
-            <Grid container spacing={3}>
-              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                <StatCard
-                  title="My FDPs"
-                  value={stats.conducted}
-                  subtitle="View FDPs you created."
-                  icon={<BookIcon />}
-                  colorStart="#9c6bf0ff"
-                  colorEnd="#c084fc"
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                <StatCard
-                  title="Conducted Events"
-                  value={stats.conducted}
-                  subtitle="Events you organized."
-                  icon={<EventIcon />}
-                  colorStart="#8b4aedff"
-                  colorEnd="#a173f0ff"
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                <StatCard
-                  title="Expert Talks"
-                  value={stats.talks}
-                  subtitle="Talks conducted & attended."
-                  icon={<PeopleIcon />}
-                  colorStart="#ac92faff"
-                  colorEnd="#c084fc"
-                />
-              </Grid>
-
-
-
-               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                <StatCard
-                  title="Attended"
-                  value={stats.attended}
-                  subtitle="Talks conducted & attended."
-                  icon={<DescriptionIcon />}
-                  colorStart="#805cedff"
-                  colorEnd="#d481edff"
-                />
-              </Grid>
-
-            </Grid>
-          </Grid> */}
-
-
-
+         
 <Grid size={12}>
   <Grid container spacing={3}>
     {[
@@ -515,9 +564,6 @@ export default function FacultyDashboard() {
     ))}
   </Grid>
 </Grid>
-
-
-
 
           {/* ---------------- Row 2: Upcoming Events ---------------- */}
           <Grid size={12}>

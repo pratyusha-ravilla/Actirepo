@@ -38,6 +38,10 @@ import ReportPreview from "./pages/Faculty/PreviewReport.jsx";
 
 //new add-on
 import DepartmentReports from "./pages/DepartmentReports.jsx";
+import RegisterEvents from "./pages/Faculty/RegisterEvents";
+import CreateEvent from "./pages/Faculty/CreateEvent.jsx";
+import MyRegisteredEvents from "./pages/Faculty/MyRegisteredEvents.jsx";
+
 
 
 export default function App() {
@@ -53,10 +57,20 @@ export default function App() {
 {/* new add-on*/}
 
 <Route path="/department/:code" element={<DepartmentReports />} />
+{/* 
+  <Route
+  path="/faculty/events"
+  element={<RegisterEvents />}
+/> */}
 
-       
+{/* //event registration */}
 
+<Route path="/faculty/events/register" element={<RegisterEvents />} />
+<Route path="/faculty/events/create" element={<CreateEvent />} />
+<Route path="/faculty/events/my" element={<MyRegisteredEvents />} />
 
+ 
+  
         {/* Faculty routes (faculty role only) */}
         <Route
           path="/faculty/dashboard"

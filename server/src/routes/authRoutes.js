@@ -8,7 +8,7 @@ import {
   getAllUsers, 
   addUser, 
   updateUserRole, 
-  deleteUser 
+  deleteUser
 } from "../controllers/authController.js";
 
 import { authMiddleware } from "../middleware/authMiddleware.js";

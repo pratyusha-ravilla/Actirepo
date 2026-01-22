@@ -4,5 +4,9 @@ export const roleMiddleware = (...allowedRoles) => {
       return res.status(403).json({ message: "Forbidden" });
     }
     next();
+    console.log("USER ROLE:", req.user.role);
+    console.log("ALLOWED:", allowedRoles);
+
   };
+  
 };
