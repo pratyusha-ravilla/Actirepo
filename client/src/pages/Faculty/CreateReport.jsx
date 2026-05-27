@@ -23,6 +23,27 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { useParams } from "react-router-dom";
 
+
+const mapEventTypeToReportType = (eventType) => {
+  switch (eventType?.toLowerCase()) {
+    case "conducted":
+      return "conducted";
+
+    case "attended":
+      return "attended";
+
+    case "expert talk":
+      return "expert_talk";
+
+    case "workshop":
+      return "conducted";
+
+    default:
+      return "conducted";
+  }
+};
+
+
 const steps = [
   "Activity Details",
   "Invitation",
@@ -52,10 +73,14 @@ export default function CreateReport() {
     duration: "",
     poPos: "",
 
+    
     // resource
-    resourceName: "",
-    resourceDesignation: "",
-    resourceInstitution: "",
+resourceName: "",
+resourceDesignation: "",
+resourceInstitution: "",
+resourceSummary: "",
+
+
 
     // session fields (new)
     sessionName: "",
@@ -111,13 +136,13 @@ export default function CreateReport() {
             ? event.customEventType
             : event.eventType;
 
-        setForm((prev) => ({
-          ...prev,
-          reportType: event.eventType,
-          activityName: event.title,
-          coordinator: event.createdBy?.name || "",
-          date: event.startDate?.split("T")[0] || "",
-        }));
+       setForm((prev) => ({
+  ...prev,
+  reportType: mapEventTypeToReportType(event.eventType),
+  activityName: event.title,
+  coordinator: event.createdBy?.name || "",
+  date: event.startDate?.split("T")[0] || "",
+}));
       } catch (err) {
         console.error("Error fetching event:", err);
       }
@@ -251,10 +276,11 @@ export default function CreateReport() {
         event: eventId, // important
         academicYear: form.academicYear,
         resourcePerson: {
-          name: form.resourceName,
-          designation: form.resourceDesignation,
-          institution: form.resourceInstitution,
-        },
+  name: form.resourceName,
+  designation: form.resourceDesignation,
+  institution: form.resourceInstitution,
+  summary: form.resourceSummary,
+},
         sessionReport: {
           sessionName: form.sessionName,
           coordinators: coordinatorsArr,
@@ -504,6 +530,25 @@ export default function CreateReport() {
                 }
               />
             </Grid>
+
+            {/* summary */}
+
+            <Grid item xs={12}>
+  <TextField
+    label="Resource Person Summary"
+    multiline
+    rows={6}
+    fullWidth
+    value={form.resourceSummary}
+    onChange={(e) =>
+      setForm({ ...form, resourceSummary: e.target.value })
+    }
+    placeholder="Enter detailed summary about the resource person"
+  />
+</Grid>
+
+
+
 
             <Grid item xs={12}>
               <Button

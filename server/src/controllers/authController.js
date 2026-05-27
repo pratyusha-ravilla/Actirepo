@@ -1,5 +1,3 @@
-
-
 //server/src/controllers/authController.js
 
 import User from "../models/User.js";
@@ -9,51 +7,6 @@ import jwt from "jsonwebtoken";
 /* =============================
        REGISTER USER (PUBLIC)
 ============================= */
-
-
-
-// export const register = async (req, res) => {
-//   try {
-//     const { name, email, password, role = "faculty" } = req.body;
-
-//     // 🔐 Step 1: Validate email format
-//     const emailRegex = /^[a-zA-Z0-9._%+-]+@atria\.edu$/;
-
-//     if (!emailRegex.test(email)) {
-//       return res.status(400).json({
-//         message: "Only Atria college emails are allowed (xxxx@atria.edu)",
-//       });
-//     }
-
-//      // 🚨 Block creating Admin / HOD / Principal from public registration
-//     if (role === "admin" || role === "hod" || role === "principal") {
-//       return res.status(403).json({
-//         message: "You are not allowed to create this account"
-//       });
-//     }
-
-//     const existing = await User.findOne({ email });
-//     if (existing)
-//       return res.status(400).json({ message: "Email already registered" });
-
-//     const hashed = await bcrypt.hash(password, 10);
-
-//     const user = await User.create({ name, email, password: hashed, role });
-
-//     res.status(201).json({
-//       message: "Registered successfully",
-//       user: {
-//         name: user.name,
-//         email: user.email,
-//         role: user.role,
-//       },
-//     });
-//   } catch (err) {
-//     res.status(500).json({ message: "Registration failed" });
-//   }
-// };
-
-
 
 export const register = async (req, res) => {
   try {
@@ -75,8 +28,6 @@ export const register = async (req, res) => {
       });
     }
 
-
-    
     const existing = await User.findOne({ email });
     if (existing)
       return res.status(400).json({ message: "Email already registered" });
@@ -101,10 +52,7 @@ export const register = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: "Registration failed" });
   }
-
 };
-
-
 
 /* =============================
        LOGIN USER
@@ -235,6 +183,3 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ message: "Delete failed" });
   }
 };
-
-
-

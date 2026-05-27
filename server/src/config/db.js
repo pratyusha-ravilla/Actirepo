@@ -1,6 +1,6 @@
 
 
-
+//server/src/config/db.js
 
 import mongoose from "mongoose";
 

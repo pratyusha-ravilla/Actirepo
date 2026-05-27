@@ -313,7 +313,7 @@ body {
 /* details & bio */
 .resource-details {
   width: 85%;
-  margin: 10px auto 20mm auto;
+  margin: 10px auto 5mm auto;
   font-size: 13pt;
   line-height: 1.45;
   color: #111;
@@ -323,6 +323,26 @@ body {
 .resource-details p:first-child {
   font-weight: 700;
   margin-bottom: 6px;
+}
+
+
+.resource-summary-section {
+  width: 85%;
+  margin: 8mm auto 0 auto;
+}
+
+.summary-title {
+  font-size: 16pt;
+  font-weight: bold;
+  margin-bottom: 1mm;
+}
+
+.resource-summary {
+  font-size: 12pt;
+  line-height: 1.2;
+  text-align: justify;
+  white-space: pre-wrap;
+  margin-top:0;
 }
 
 /* ensure header logos (if you use header-container) still float left/right */

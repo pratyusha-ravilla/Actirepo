@@ -85,9 +85,13 @@ export const createActivity = async (req, res) => {
   try {
     const payload = req.body.payload ? JSON.parse(req.body.payload) : {};
 
-    // ensure resource person & session objects exist
+    // // ensure resource person & session objects exist
+    // payload.resourcePerson = payload.resourcePerson || {};
+    // payload.sessionReport = payload.sessionReport || {};
+
+
     payload.resourcePerson = payload.resourcePerson || {};
-    payload.sessionReport = payload.sessionReport || {};
+payload.resourcePerson.summary = payload.resourcePerson.summary || "";
 
     // Files (store relative paths like "uploads/filename")
     if (req.files?.invitation) payload.invitation = "uploads/" + req.files.invitation[0].filename;
@@ -144,7 +148,10 @@ export const getActivity = async (req, res) => {
 export const updateActivity = async (req, res) => {
   try {
     const payload = req.body.payload ? JSON.parse(req.body.payload) : {};
+    // payload.resourcePerson = payload.resourcePerson || {};
+
     payload.resourcePerson = payload.resourcePerson || {};
+payload.resourcePerson.summary = payload.resourcePerson.summary || "";
 
     if (req.files?.invitation) payload.invitation = "uploads/" + req.files.invitation[0].filename;
     if (req.files?.poster) payload.poster = "uploads/" + req.files.poster[0].filename;
@@ -231,6 +238,13 @@ export const getPdf = async (req, res) => {
     html = html.replace(/{{resourceDesignation}}/g, a.resourcePerson?.designation || "");
     html = html.replace(/{{resourceInstitution}}/g, a.resourcePerson?.institution || "");
     html = html.replace(/{{resourcePhoto}}/g, toDataUrl(a.resourcePerson?.photo));
+
+
+    //summary tab
+    html = html.replace(
+  /{{resourceSummary}}/g,
+  a.resourcePerson?.summary || ""
+);
 
     html = html.replace(/{{participants}}/g, (a.sessionReport?.participantsCount ?? a.sessionReport?.participants ?? "") + "");
     html = html.replace(/{{facultyCount}}/g, (a.sessionReport?.facultyCount ?? "") + "");

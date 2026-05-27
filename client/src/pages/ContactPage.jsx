@@ -31,62 +31,7 @@ export default function ContactPage() {
     }
   };
 
-  // return (
-  //   <>
-  //     {/* <HomeNavbar /> */}
-
-  //     <Box sx={{ maxWidth: 600, mx: "auto", mt: 8 }}>
-  //       <Paper sx={{ p: 4, borderRadius: 4 }}>
-  //         <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
-  //           Contact Us 📩
-  //         </Typography>
-
-  //         <TextField
-  //           fullWidth
-  //           label="Your Name"
-  //           name="name"
-  //           value={form.name}
-  //           onChange={handleChange}
-  //           sx={{ mb: 2 }}
-  //         />
-
-  //         <TextField
-  //           fullWidth
-  //           label="Email"
-  //           name="email"
-  //           value={form.email}
-  //           onChange={handleChange}
-  //           sx={{ mb: 2 }}
-  //         />
-
-  //         <TextField
-  //           fullWidth
-  //           label="Message"
-  //           name="message"
-  //           multiline
-  //           rows={4}
-  //           value={form.message}
-  //           onChange={handleChange}
-  //           sx={{ mb: 3 }}
-  //         />
-
-  //         <Button
-  //           fullWidth
-  //           variant="contained"
-  //           onClick={handleSubmit}
-  //           disabled={loading}
-  //           sx={{
-  //             borderRadius: 3,
-  //             fontWeight: 700,
-  //             background: "linear-gradient(135deg,#7c3aed,#5b21b6)"
-  //           }}
-  //         >
-  //           {loading ? "Sending..." : "Send Message"}
-  //         </Button>
-  //       </Paper>
-  //     </Box>
-  //   </>
-  // );
+  
 
 return (
   <Box className="contact-page">

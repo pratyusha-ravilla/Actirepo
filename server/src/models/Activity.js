@@ -28,6 +28,12 @@ const activitySchema = new mongoose.Schema(
       designation: String,
       institution: String,
       photo: String,
+
+      //summary tab
+      summary: {
+    type: String,
+    default: ""
+  }
     },
 
     // Expanded sessionReport schema - added the new fields you use
