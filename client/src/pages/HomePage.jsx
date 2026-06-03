@@ -39,6 +39,80 @@ export default function HomePage() {
 </section>
 
 
+
+{/* additional changes */}
+
+
+<section className="stats-strip">
+  <div className="stat-box">
+    <h3>3+</h3>
+    <p>Approval Levels</p>
+  </div>
+
+  <div className="stat-box">
+    <h3>8+</h3>
+    <p>Report Sections</p>
+  </div>
+
+  <div className="stat-box">
+    <h3>100%</h3>
+    <p>Structured Workflow</p>
+  </div>
+
+  <div className="stat-box">
+    <h3>PDF</h3>
+    <p>& DOCX Export</p>
+  </div>
+</section>
+
+<section className="home-section process-section">
+  <h2 className="section-title">How Actify Works</h2>
+  <p className="section-desc">
+    A simple end-to-end flow that helps faculty create, submit, approve, and archive activity reports with ease.
+  </p>
+
+  <div className="process-grid">
+    <div className="process-card">
+      <span>01</span>
+      <h4>Submit Report</h4>
+      <p>Faculty creates an activity report using a step-by-step structured form.</p>
+    </div>
+
+    <div className="process-card">
+      <span>02</span>
+      <h4>Review & Approve</h4>
+      <p>HOD, admin, or principal reviews the report and approves or rejects it.</p>
+    </div>
+
+    <div className="process-card">
+      <span>03</span>
+      <h4>Export & Archive</h4>
+      <p>Download the approved report in PDF or DOCX and keep it ready for records.</p>
+    </div>
+  </div>
+</section>
+
+<section className="home-section why-section">
+  <h2 className="section-title">Why Institutions Choose Actify</h2>
+
+  <div className="why-grid">
+    <div className="why-card">
+      <h4>Clear Structure</h4>
+      <p>Every report follows a consistent professional format.</p>
+    </div>
+
+    <div className="why-card">
+      <h4>Faster Approvals</h4>
+      <p>Role-based review keeps the workflow smooth and traceable.</p>
+    </div>
+
+    <div className="why-card">
+      <h4>Accreditation Ready</h4>
+      <p>Reports are neatly organized for audits, reviews, and documentation.</p>
+    </div>
+  </div>
+</section>
+
 {/* ================= DEPARTMENTS ================= */}
 <section className="home-section departments-section">
   <h2 className="section-title">Department-wise Activity Scope</h2>

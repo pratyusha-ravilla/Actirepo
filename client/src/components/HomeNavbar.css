@@ -1,4 +1,6 @@
-.home-navbar {
+/* blue color bg */
+
+/* .home-navbar {
   position: fixed;
   top: 0;
   width: 100%;
@@ -32,4 +34,122 @@
 
 .home-navbar ul li a:hover {
   color: #ffd369;
+} */
+
+
+
+
+/* white color bg */
+/* ================= NAVBAR ================= */
+
+.home-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 999;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 16px 64px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.12);
+}
+
+
+.home-navbar .logo {
+  font-size: 1.9rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #1d4ed8;
+}
+
+
+.home-navbar ul {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+
+.home-navbar ul li a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 10px 18px;
+  border-radius: 999px;
+
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+
+  color: #334155;
+  transition: all 0.25s ease;
+}
+
+
+.home-navbar ul li a:hover {
+  background: #eff6ff;
+  color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+
+.home-navbar ul li a:active {
+  transform: translateY(0);
+}
+
+
+.home-navbar ul li:nth-child(5) a {
+  border: 1px solid #93c5fd;
+  color: #1d4ed8;
+  background: #ffffff;
+}
+
+.home-navbar ul li:nth-child(5) a:hover {
+  background: #dbeafe;
+}
+
+
+.home-navbar ul li:nth-child(6) a {
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22);
+}
+
+.home-navbar ul li:nth-child(6) a:hover {
+  background: linear-gradient(135deg, #1e40af, #1d4ed8);
+  color: #ffffff;
+}
+
+
+.home-wrapper {
+  padding-top: 84px;
+}
+
+
+@media (max-width: 900px) {
+  .home-navbar {
+    padding: 14px 20px;
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .home-navbar ul {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .home-navbar ul li a {
+    padding: 9px 14px;
+    font-size: 0.9rem;
+  }
 }
