@@ -15,30 +15,49 @@ export default function HomePage() {
       
 
       {/* ================= HERO ================= */}
-     <section id="home" className="home-hero">
-      
-  <div className="hero-content">
     
+
+
+<section id="home" className="home-hero">
+  <div className="hero-content">
+    <div className="hero-tag">ACADEMIC REPORTING • MODERN WORKFLOW</div>
+
     <h1>
-      Welcome to <span>Actify</span>
+      Build reports in <span>Actify</span> with clarity and speed.
     </h1>
+
     <p>
-      A Smart Activity Report Management System designed for academic
-      institutions to create, review, approve, and archive professional
-      activity reports with ease.
+      A smart report management system for faculty to create, review, approve,
+      and archive structured activity reports with ease.
     </p>
 
-    <Link to="/register">
-      <button className="hero-btn">Get Started</button>
-    </Link>
+    <div className="hero-actions">
+      <Link to="/register">
+        <button className="hero-btn primary">Get Started</button>
+      </Link>
+      <Link to="/login">
+        <button className="hero-btn secondary">Login</button>
+      </Link>
+    </div>
+
+    
   </div>
 
   <div className="hero-visual">
-    {/* optional decorative icons / illustration placeholder */}
+    <div className="dashboard-card card-one">
+      <span>Live workflow</span>
+      <h4>Faculty → HOD → Admin</h4>
+    </div>
+    <div className="dashboard-card card-two">
+      <span>Reports</span>
+      <h4>Structured + printable</h4>
+    </div>
+    <div className="dashboard-card card-three">
+      <span>Approval</span>
+      <h4>Fast review actions</h4>
+    </div>
   </div>
 </section>
-
-
 
 {/* additional changes */}
 
@@ -271,28 +290,71 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ================= CTA ================= */}
-      <section id="contact" className="home-cta">
-        <h2>Transform Academic Reporting with Actify</h2>
+   
+
+
+
+{/* ================= CTA + FOOTER WRAPPER ================= */}
+<div className="home-end">
+  <section id="contact" className="home-cta">
+    <div className="cta-overlay"></div>
+
+    <div className="cta-content">
+      <span className="cta-badge">
+        Academic Activity Management Platform
+      </span>
+
+      <h2>
+        Transform Academic Reporting with <span>Actify</span>
+      </h2>
+
+      <p>
+        Move away from scattered files, spreadsheets, and manual
+        documentation. Actify streamlines report creation, approvals,
+        storage, and exports into one centralized platform.
+      </p>
+
+      <div className="home-actions">
+        <Link to="/register">
+          <button className="home-btn primary">Get Started</button>
+        </Link>
+
+        <Link to="/login">
+          <button className="home-btn secondary">Login</button>
+        </Link>
+      </div>
+    </div>
+  </section>
+
+  <footer className="footer">
+    <div className="footer-content">
+      <div className="footer-brand">
+        <h2>Actify</h2>
         <p>
-          Move away from scattered files and manual documentation.
-          Actify brings structure, clarity, and professionalism to
-          academic activity reporting.
+          Smart Activity Report Management System for academic institutions.
         </p>
+      </div>
 
-        <div className="home-actions">
-          <Link to="/register">
-            <button className="home-btn primary">Get Started</button>
-          </Link>
+      <div className="footer-links">
+        <h4>Quick Links</h4>
+        <a href="#home">Home</a>
+        <a href="#features">Features</a>
+        <a href="#roles">Roles</a>
+      </div>
 
-          <Link to="/login">
-            <button className="home-btn secondary">Login</button>
-          </Link>
-        </div>
-      </section>
+      <div className="footer-links">
+        <h4>Access</h4>
+        <Link to="/register">Register</Link>
+        <Link to="/login">Login</Link>
+        <Link to="/contact">Contact</Link>
+      </div>
+    </div>
 
-
-     
+    <div className="footer-bottom">
+      © 2026 Actify | Developed for Academic Activity Management
+    </div>
+  </footer>
+</div>
 
     </div>
     </>
